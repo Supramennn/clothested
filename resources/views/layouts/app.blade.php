@@ -13,7 +13,15 @@
             <a href="{{ route('home') }}" class="text-lg font-bold tracking-tight text-sky-700">ClothesTed</a>
 
             <nav class="flex items-center gap-4 text-sm font-medium text-slate-600">
+                <a href="{{ route('home') }}" class="hover:text-sky-700">Catalog</a>
                 @auth
+                    <a href="{{ route('cart') }}" class="hover:text-sky-700">
+                        Cart
+                        @if (($cartCount = \App\Models\CartItem::query()->where('user_id', auth()->id())->sum('quantity')) > 0)
+                            ({{ $cartCount }})
+                        @endif
+                    </a>
+                    <a href="{{ route('wishlist') }}" class="hover:text-sky-700">Wishlist</a>
                     <a href="{{ route('profile') }}" class="hover:text-sky-700">Profile</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf

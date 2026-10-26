@@ -14,7 +14,7 @@ Status values: `done` / `partial` / `not started`.
 | 1 | Project setup, migrations per ERD 2.1-2.5, models, factories, seeders | done |
 | 2 | Authentication, roles, middleware, profile (FR-01..FR-08) | done |
 | 3 | Storefront catalog and product detail (FR-09..FR-24) | done |
-| 4 | Cart and wishlist (FR-25..FR-31) | not started |
+| 4 | Cart and wishlist (FR-25..FR-31) | done |
 | 5 | Checkout, OrderService, stock reservation (FR-32..FR-40) | not started |
 | 6 | Midtrans payment, webhook, expiry (FR-41..FR-47) | not started |
 | 7 | Order lifecycle and admin panel (FR-48..FR-57) | not started |
@@ -87,6 +87,34 @@ Status values: `done` / `partial` / `not started`.
 - Tests: `tests/Feature/CatalogTest.php` and `tests/Feature/ProductDetailTest.php`
   cover all Key Test Criteria of sections 5.2 and 5.3.
 
+## Cart and Wishlist (Phase 4)
+
+- Livewire class components: `app/Livewire/CartManager.php` rendered by `/cart` and
+  `app/Livewire/Wishlist.php` rendered by `/wishlist` (`routes/web.php`, both under
+  `auth`, route names `cart` and `wishlist`).
+- `CartItem::mergeAdd()` (`app/Models/CartItem.php`) is the single merge point for adds
+  from the product page and the wishlist: the same SKU stays one row (FR-26) and the
+  quantity is capped at `min(30, stock)` (FR-27).
+- CartManager seeds typed quantity bindings on mount and clamps every edit through
+  `setQty()`: below 1 lands on 1, above 30 or above stock clips with the explanatory
+  message "Quantity clipped to {N}: only {S} left in stock." or "Quantity clipped to
+  {N}, the per-SKU limit is 30." (FR-27); sold-out rows refuse edits outright.
+- The subtotal and per-row totals re-render live from the typed binding
+  (`wire:model.live="quantities.{{ $item->id }}"` + `updatedQuantities` hook) with no
+  page load (FR-28). Rows whose stock shrank while parked are flagged ("Stock changed:
+  only {S} left") and rows sold out show the remove hint (FR-29 flagging in the cart;
+  the checkout-time block lands in Phase 5).
+- Wishlist: saved products are product-level, not tied to an SKU
+  (`app/Livewire/Wishlist.php`); move-to-cart takes the product's first variant with
+  stock, merges through `mergeAdd`, then removes the save (FR-30). Products out of
+  stock everywhere or no longer active stay saved with a notice.
+- Header nav (`resources/views/layouts/app.blade.php`) links Catalog, Cart (with the
+  summed quantity), and Wishlist for signed-in accounts; the product page confirms an
+  add with "Added to cart: {label}.".
+- Tests: `tests/Feature/CartManagerTest.php` (12) and `tests/Feature/WishlistTest.php`
+  (6) cover FR-25..FR-31 flows and the three Key Test Criteria of section 5.4;
+  `productWithVariants()` moved to `tests/Pest.php` as a shared helper.
+
 ## Functional Requirements
 
 | FR | Requirement | Module | Status | Files |
@@ -111,17 +139,17 @@ Status values: `done` / `partial` / `not started`.
 | FR-18 | Variant picker maps to SKU price/stock | ProductDetail | done | `app/Livewire/ProductDetail.php` |
 | FR-19 | Final price updates live | ProductDetail | done | `app/Models/ProductVariant.php` (`finalPrice()`), `app/Livewire/ProductDetail.php` |
 | FR-20 | Add to cart blocks zero stock SKU | ProductDetail | done | `app/Livewire/ProductDetail.php` (`addToCart`) |
-| FR-21 | Wishlist toggle at product level | ProductDetail | done | `app/Livewire/ProductDetail.php` (`toggleWishlist`); wishlist page arrives in Phase 4 |
+| FR-21 | Wishlist toggle at product level | ProductDetail | done | `app/Livewire/ProductDetail.php` (`toggleWishlist`), page `app/Livewire/Wishlist.php` |
 | FR-22 | Inactive product page 404 | ProductDetail | done | `app/Livewire/ProductDetail.php` |
 | FR-23 | Price snapshot at checkout | OrderService (FR-37) | partial | snapshot columns exist since Phase 1; values are written at checkout in Phase 5 |
 | FR-24 | Publish only with at least one variant | Product scope | done | `app/Models/Product.php` (`active()` scope requires variants); admin publish form follows in Phase 7 |
-| FR-25 | Login-required add to cart with return URL | CartManager | not started | — |
-| FR-26 | Same SKU merges into one row | CartManager | not started | — |
-| FR-27 | Quantity clipped to 1..30 and stock | CartManager | not started | — |
-| FR-28 | Instant subtotal updates | CartManager | not started | — |
-| FR-29 | Stock recheck at checkout | OrderService | not started | — |
-| FR-30 | Wishlist move to cart uses first available variant | Wishlist | not started | — |
-| FR-31 | Cart and wishlist persist per account | Tables | partial | `database/migrations/2026_10_26_081243_create_cart_items_table.php` |
+| FR-25 | Login-required add to cart with return URL | CartManager | done | `app/Livewire/ProductDetail.php` + `app/Livewire/Auth/Login.php` (`url.intended`) |
+| FR-26 | Same SKU merges into one row | CartManager | done | `app/Models/CartItem.php` (`mergeAdd`) |
+| FR-27 | Quantity clipped to 1..30 and stock | CartManager | done | `app/Livewire/CartManager.php` (`setQty`) |
+| FR-28 | Instant subtotal updates | CartManager | done | `app/Livewire/CartManager.php`, `resources/views/livewire/cart-manager.blade.php` |
+| FR-29 | Stock recheck at checkout | OrderService | partial | cart flags in `app/Livewire/CartManager.php`; sold-out block lands in Phase 5 |
+| FR-30 | Wishlist move to cart uses first available variant | Wishlist | done | `app/Livewire/Wishlist.php` (`moveToCart`) |
+| FR-31 | Cart and wishlist persist per account | Tables | done | `database/migrations/2026_10_26_081243_create_cart_items_table.php`, tests in `tests/Feature/CartManagerTest.php` |
 | FR-32 | Checkout requires login; empty cart guidance | CheckoutForm | not started | — |
 | FR-33 | Pickup or courier method | CheckoutForm | not started | — |
 | FR-34 | Address form required fields | CheckoutForm | not started | — |
@@ -168,6 +196,9 @@ Status values: `done` / `partial` / `not started`.
 | Picking a variant updates the final price and stock shown (5.3) | done |
 | A SKU with stock 0 cannot be added from the product page (5.3) | done |
 | A deactivated product no longer opens from its links (5.3) | done |
+| Adding the same SKU twice keeps one row with a combined quantity (5.4) | done |
+| Quantity 40 with stock 12 is clipped to 12 with a message (5.4) | done |
+| A visitor pressing add-to-cart returns to the product page after sign-in (5.4) | done |
 | Courier checkout stock deduction + total | not started |
 | order_code format and uniqueness | not started |
 | Settlement webhook idempotent, paid_at filled | not started |

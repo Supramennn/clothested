@@ -90,6 +90,10 @@
                 </button>
             </div>
 
+            @if ($this->addedMessage)
+                <p class="text-sm text-emerald-700">{{ $this->addedMessage }}</p>
+            @endif
+
             <p class="leading-relaxed text-slate-600">{{ $product->description }}</p>
         </section>
     </div>

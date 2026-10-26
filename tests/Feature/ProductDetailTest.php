@@ -2,28 +2,10 @@
 
 use App\Livewire\ProductDetail;
 use App\Models\CartItem;
-use App\Models\Product;
 use App\Models\User;
 use App\Models\Wishlist;
 use App\Support\Price;
 use Livewire\Livewire;
-
-/**
- * Creates a product with one or more SKUs and returns product and variants.
- */
-function productWithVariants(array $productAttributes = [], ?array $variants = null): Product
-{
-    $product = Product::factory()->create($productAttributes);
-    $variants ??= [
-        ['sku' => 'SKU-DET-1', 'size' => 'M', 'color' => 'Navy', 'additional_price' => 0, 'stock' => 10],
-    ];
-
-    foreach ($variants as $variant) {
-        $product->variants()->create($variant);
-    }
-
-    return $product->refresh();
-}
 
 test('product page shows breadcrumb, gallery, description, and category (FR-17)', function () {
     $product = productWithVariants(['description' => 'Woven from soft cotton.']);

@@ -4,9 +4,11 @@ use App\Http\Controllers\LogoutController;
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
+use App\Livewire\CartManager;
 use App\Livewire\CatalogPage;
 use App\Livewire\ProductDetail;
 use App\Livewire\Profile;
+use App\Livewire\Wishlist;
 use Illuminate\Support\Facades\Route;
 
 Route::livewire('/', CatalogPage::class)->name('home');
@@ -20,6 +22,8 @@ Route::middleware('guest')->group(function (): void {
 
 Route::middleware('auth')->group(function (): void {
     Route::livewire('/profile', Profile::class)->name('profile');
+    Route::livewire('/cart', CartManager::class)->name('cart');
+    Route::livewire('/wishlist', Wishlist::class)->name('wishlist');
 
     Route::post('/logout', LogoutController::class)->name('logout');
 });

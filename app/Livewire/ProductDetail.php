@@ -25,6 +25,8 @@ class ProductDetail extends Component
 
     public ?string $size = null;
 
+    public ?string $addedMessage = null;
+
     /**
      * FR-22: inactive or missing slugs are simply not found, old links too.
      */
@@ -137,6 +139,8 @@ class ProductDetail extends Component
 
         $this->color = $color;
 
+        $this->addedMessage = null;
+
         if (! in_array($this->size, $this->sizeOptions(), true)) {
             $this->size = $this->sizeOptions()[0] ?? null;
         }
@@ -149,6 +153,8 @@ class ProductDetail extends Component
     {
         if (in_array($size, $this->sizeOptions(), true)) {
             $this->size = $size;
+
+            $this->addedMessage = null;
         }
     }
 
@@ -174,26 +180,9 @@ class ProductDetail extends Component
             return;
         }
 
-        $quantityCap = min(30, $variant->stock);
+        CartItem::mergeAdd($user->id, $variant);
 
-        $existing = CartItem::query()
-            ->where('user_id', $user->id)
-            ->where('product_variant_id', $variant->id)
-            ->first();
-
-        if ($existing === null) {
-            CartItem::query()->create([
-                'user_id' => $user->id,
-                'product_variant_id' => $variant->id,
-                'quantity' => 1,
-            ]);
-
-            return;
-        }
-
-        $existing->update([
-            'quantity' => min($existing->quantity + 1, $quantityCap),
-        ]);
+        $this->addedMessage = 'Added to cart: '.$variant->label().'.';
 
         $this->dispatch('cart-updated');
     }
