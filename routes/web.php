@@ -4,10 +4,14 @@ use App\Http\Controllers\LogoutController;
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
+use App\Livewire\CatalogPage;
+use App\Livewire\ProductDetail;
 use App\Livewire\Profile;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'home')->name('home');
+Route::livewire('/', CatalogPage::class)->name('home');
+Route::livewire('/products/{slug}', ProductDetail::class)->name('products.show');
+Route::livewire('/category/{slug}', CatalogPage::class)->name('categories.show');
 
 Route::middleware('guest')->group(function (): void {
     Route::livewire('/register', Register::class)->name('register');

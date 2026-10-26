@@ -60,6 +60,14 @@ class ProductVariant extends Model
     }
 
     /**
+     * FR-19: the purchasable amount of this SKU, base price plus its surcharge.
+     */
+    public function finalPrice(): float
+    {
+        return (float) $this->product->base_price + (float) $this->additional_price;
+    }
+
+    /**
      * Whether the SKU can serve the requested quantity (stock never goes negative).
      */
     public function isStockAvailable(int $quantity): bool

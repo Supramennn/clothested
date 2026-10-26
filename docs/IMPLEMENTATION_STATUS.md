@@ -13,7 +13,7 @@ Status values: `done` / `partial` / `not started`.
 | 0 | Plan + requirement checklist | done |
 | 1 | Project setup, migrations per ERD 2.1-2.5, models, factories, seeders | done |
 | 2 | Authentication, roles, middleware, profile (FR-01..FR-08) | done |
-| 3 | Storefront catalog and product detail (FR-09..FR-24) | not started |
+| 3 | Storefront catalog and product detail (FR-09..FR-24) | done |
 | 4 | Cart and wishlist (FR-25..FR-31) | not started |
 | 5 | Checkout, OrderService, stock reservation (FR-32..FR-40) | not started |
 | 6 | Midtrans payment, webhook, expiry (FR-41..FR-47) | not started |
@@ -61,6 +61,32 @@ Status values: `done` / `partial` / `not started`.
 - Tests: `tests/Feature/{AuthRegistrationTest,AuthLoginTest,RoleAccessTest,ProfileTest}.php`
   covering every login/register/logout flow plus the three Key Test Criteria of section 5.1.
 
+## Storefront (Phase 3)
+
+- Livewire class components: `app/Livewire/CatalogPage.php` rendered by `/` and
+  `/category/{slug}`, `app/Livewire/ProductDetail.php` rendered by `/products/{slug}`
+  (`routes/web.php`, route names `home`, `categories.show`, `products.show`).
+- CatalogPage holds all filter state in `#[Url]` properties (shareable links, FR-14):
+  text search with `whereLike` over name + description (FR-11), category slug select,
+  size/color chips validated against live options and mapped back to their canonical
+  casing (FR-12), min/max price, sort `newest`/`price_low`/`price_high` with newest as
+  the default (FR-13), `WithPagination` at 24 per page (FR-15), targeted `updated*`
+  hooks reset pagination, plus a `clearFilters` action.
+- Views: `resources/views/livewire/catalog-page.blade.php`,
+  `resources/views/livewire/product-detail.blade.php`,
+  `resources/views/components/product-card.blade.php` (FR-10 card: first image by
+  sort_order, name, "starting from" base price, featured badge).
+- ProductDetail: category breadcrumb (FR-17), color then size picker restricted to real
+  SKUs (FR-18), final price through `ProductVariant::finalPrice()` (FR-19), stock line
+  and a disabled add button for zero-stock SKUs (FR-20), product-level wishlist toggle
+  (FR-21), and a 404 for inactive or missing slugs (FR-22). `addToCart` creates or merges
+  the `CartItem` row with a `min(30, stock)` cap and sends guests to login while storing
+  `url.intended` — groundwork for FR-25; the full CartManager lands in Phase 4.
+- Helpers: `app/Support/Price.php` (`Price::format` for IDR), `ProductImage::url()` for
+  public-disk gallery URLs.
+- Tests: `tests/Feature/CatalogTest.php` and `tests/Feature/ProductDetailTest.php`
+  cover all Key Test Criteria of sections 5.2 and 5.3.
+
 ## Functional Requirements
 
 | FR | Requirement | Module | Status | Files |
@@ -73,22 +99,22 @@ Status values: `done` / `partial` / `not started`.
 | FR-06 | Profile: change name/phone | Profile page | done | `app/Livewire/Profile.php` |
 | FR-07 | Admin area protected by role middleware | Middleware | done | `app/Http/Middleware/EnsureRole.php` |
 | FR-08 | No automated password reset in v1.0 | Scope decision | done | no recovery routes shipped |
-| FR-09 | Catalog shows only active products | CatalogPage | not started | — |
-| FR-10 | Product card: image, name, base price, featured badge | CatalogPage | not started | — |
-| FR-11 | Text search over name/description | CatalogPage | not started | — |
-| FR-12 | Combined filters (category, size, color, price) | CatalogPage | not started | — |
-| FR-13 | Sorting newest/price | CatalogPage | not started | — |
-| FR-14 | Livewire updates without full reload, URL state | CatalogPage | not started | — |
-| FR-15 | Pagination 24 per page | CatalogPage | not started | — |
-| FR-16 | Category management, unique slugs | CatalogPage + admin CRUD | not started | — |
-| FR-17 | Product page with slug and gallery order | ProductDetail | not started | — |
-| FR-18 | Variant picker maps to SKU price/stock | ProductDetail | not started | — |
-| FR-19 | Final price updates live | ProductDetail | not started | — |
-| FR-20 | Add to cart blocks zero stock SKU | ProductDetail | not started | — |
-| FR-21 | Wishlist toggle at product level | ProductDetail | not started | — |
-| FR-22 | Inactive product page 404 | ProductDetail | not started | — |
-| FR-23 | Order item snapshot columns | OrderService (FR-37) | not started | — |
-| FR-24 | Publish only with at least one variant | Product scope | partial | `app/Models/Product.php` |
+| FR-09 | Catalog shows only active products | CatalogPage | done | `app/Livewire/CatalogPage.php` (`Product::active()` scope) |
+| FR-10 | Product card: image, name, base price, featured badge | CatalogPage | done | `resources/views/components/product-card.blade.php` |
+| FR-11 | Text search over name/description | CatalogPage | done | `app/Livewire/CatalogPage.php` (`whereLike` name + description) |
+| FR-12 | Combined filters (category, size, color, price) | CatalogPage | done | `app/Livewire/CatalogPage.php` |
+| FR-13 | Sorting newest/price | CatalogPage | done | `app/Livewire/CatalogPage.php` |
+| FR-14 | Livewire updates without full reload, URL state | CatalogPage | done | `app/Livewire/CatalogPage.php` (`#[Url]` + `WithPagination`) |
+| FR-15 | Pagination 24 per page | CatalogPage | done | `app/Livewire/CatalogPage.php` |
+| FR-16 | Category management, unique slugs | CatalogPage + admin CRUD | partial | `app/Livewire/CatalogPage.php`; admin category CRUD arrives in Phase 7 |
+| FR-17 | Product page with slug and gallery order | ProductDetail | done | `app/Livewire/ProductDetail.php`, `app/Models/ProductImage.php` |
+| FR-18 | Variant picker maps to SKU price/stock | ProductDetail | done | `app/Livewire/ProductDetail.php` |
+| FR-19 | Final price updates live | ProductDetail | done | `app/Models/ProductVariant.php` (`finalPrice()`), `app/Livewire/ProductDetail.php` |
+| FR-20 | Add to cart blocks zero stock SKU | ProductDetail | done | `app/Livewire/ProductDetail.php` (`addToCart`) |
+| FR-21 | Wishlist toggle at product level | ProductDetail | done | `app/Livewire/ProductDetail.php` (`toggleWishlist`); wishlist page arrives in Phase 4 |
+| FR-22 | Inactive product page 404 | ProductDetail | done | `app/Livewire/ProductDetail.php` |
+| FR-23 | Price snapshot at checkout | OrderService (FR-37) | partial | snapshot columns exist since Phase 1; values are written at checkout in Phase 5 |
+| FR-24 | Publish only with at least one variant | Product scope | done | `app/Models/Product.php` (`active()` scope requires variants); admin publish form follows in Phase 7 |
 | FR-25 | Login-required add to cart with return URL | CartManager | not started | — |
 | FR-26 | Same SKU merges into one row | CartManager | not started | — |
 | FR-27 | Quantity clipped to 1..30 and stock | CartManager | not started | — |
@@ -136,6 +162,12 @@ Status values: `done` / `partial` / `not started`.
 |---|---|
 | Registration and login redirect by role | done |
 | Admin area rejects customer role | done |
+| Inactive product never appears in listings or search (5.2) | done |
+| Category and price filters apply together without a reload (5.2) | done |
+| A URL with filter state reproduces the same list when reopened (5.2) | done |
+| Picking a variant updates the final price and stock shown (5.3) | done |
+| A SKU with stock 0 cannot be added from the product page (5.3) | done |
+| A deactivated product no longer opens from its links (5.3) | done |
 | Courier checkout stock deduction + total | not started |
 | order_code format and uniqueness | not started |
 | Settlement webhook idempotent, paid_at filled | not started |
