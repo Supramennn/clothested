@@ -3,7 +3,80 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+/*
+    ClothesTed visual system:
+    - Warm stone neutrals (not blue-grey) so white surfaces read as paper,
+      with hairline borders doing the separation work.
+    - Sky is the single accent and stays at the primary action moment only;
+      selected options turn near-black instead of echoing the accent.
+    - Playfair Display carries the fashion-editorial voice on the brand and
+      page titles; Instrument Sans keeps body and prices readable.
+    - Radius set: surfaces rounded-xl, controls rounded-md, full only for
+      count and status badges.
+    - Motion hud: hover-state transitions only, no loops.
+*/
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+}
+
+@layer components {
+    /* Solid primary action; the one place sky appears every page. */
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 rounded-md bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white
+            transition-colors hover:bg-sky-700
+            focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700
+            disabled:pointer-events-none disabled:bg-stone-200 disabled:text-stone-500;
+    }
+
+    /* Outlined secondary action for the supporting command in a group. */
+    .btn-outline {
+        @apply inline-flex items-center justify-center gap-2 rounded-md border border-stone-300 bg-white px-5 py-2.5 text-sm
+            font-semibold text-stone-700 transition-colors hover:border-stone-400 hover:text-stone-950
+            focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700
+            disabled:pointer-events-none disabled:border-stone-200 disabled:text-stone-400;
+    }
+
+    /* Quiet text action inside navs, forms, and lists. */
+    .btn-ghost {
+        @apply text-sm font-medium text-stone-600 transition-colors hover:text-stone-950
+            focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700;
+    }
+
+    .card {
+        @apply rounded-xl border border-stone-200 bg-white;
+    }
+
+    /* Form fields share one silhouette everywhere. */
+    .input {
+        @apply w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900
+            placeholder:text-stone-400 focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600
+            disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-500;
+    }
+
+    .field-label {
+        @apply block text-sm font-medium text-stone-700;
+    }
+
+    /* Small all-caps label; carries real metadata (category, column name). */
+    .eyebrow {
+        @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-400;
+    }
+
+    .alert {
+        @apply rounded-lg border px-4 py-3 text-sm;
+    }
+
+    .alert-danger {
+        @apply border-red-200 bg-red-50 text-red-700;
+    }
+
+    .alert-success {
+        @apply border-emerald-200 bg-emerald-50 text-emerald-700;
+    }
+
+    .alert-warn {
+        @apply border-amber-200 bg-amber-50 text-amber-800;
+    }
 }

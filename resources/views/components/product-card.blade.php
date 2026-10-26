@@ -1,24 +1,26 @@
 @props(['product'])
 
 <a href="{{ route('products.show', $product->slug) }}"
-   class="group block overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:border-sky-300 hover:shadow-md">
-    <div class="relative bg-sky-50">
+   class="group flex flex-col overflow-hidden rounded-xl border border-stone-200 bg-white transition-colors hover:border-stone-400">
+    <div class="relative overflow-hidden bg-stone-100">
         <img src="{{ $product->images->first()?->url() }}"
              alt="{{ $product->name }}"
-             class="aspect-[4/5] w-full object-cover">
+             class="aspect-[4/5] w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]">
         @if ($product->is_featured)
-            <span class="absolute top-2 left-2 rounded-full bg-sky-600 px-2 py-0.5 text-xs font-semibold text-white">
+            <span class="absolute top-3 left-3 rounded-full bg-stone-900/90 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-white">
                 Featured
             </span>
         @endif
     </div>
 
-    <div class="space-y-1 p-4">
-        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">{{ $product->category?->name }}</p>
-        <h3 class="font-semibold text-slate-900 group-hover:text-sky-700">{{ $product->name }}</h3>
-        <p class="text-sm text-slate-700">
-            <span class="font-semibold text-slate-900">Rp {{ number_format((float) $product->base_price, 0, ',', '.') }}</span>
-            <span class="text-xs text-slate-400">starting from</span>
+    <div class="px-4 py-4">
+        <p class="eyebrow">{{ $product->category?->name }}</p>
+        <h3 class="mt-1 font-display text-lg leading-snug text-stone-900">{{ $product->name }}</h3>
+        <p class="mt-2 text-sm text-stone-500">
+            Starting from
+            <span class="font-semibold text-stone-900 tabular-nums">
+                Rp {{ number_format((float) $product->base_price, 0, ',', '.') }}
+            </span>
         </p>
     </div>
 </a>

@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\CartItem;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use App\Models\Wishlist;
 use Illuminate\Contracts\View\View;
@@ -26,6 +27,8 @@ class ProductDetail extends Component
     public ?string $size = null;
 
     public ?string $addedMessage = null;
+
+    public ?int $selectedImageId = null;
 
     /**
      * FR-22: inactive or missing slugs are simply not found, old links too.
@@ -117,6 +120,27 @@ class ProductDetail extends Component
         return $variant !== null
             ? $variant->finalPrice()
             : (float) $this->product()->base_price;
+    }
+
+    /**
+     * The gallery holds only images; clicking a thumb re-seats the main shot.
+     */
+    public function selectImage(int $imageId): void
+    {
+        if ($this->product()->images->contains('id', $imageId)) {
+            $this->selectedImageId = $imageId;
+        }
+    }
+
+    /**
+     * The image currently shown in the main frame.
+     */
+    #[Computed]
+    public function displayedImage(): ?ProductImage
+    {
+        $images = $this->product()->images;
+
+        return $images->firstWhere('id', $this->selectedImageId) ?? $images->first();
     }
 
     /**

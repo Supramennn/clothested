@@ -1,61 +1,68 @@
 <div class="space-y-6">
-    <div>
-        <h1 class="text-2xl font-bold text-slate-900">Wishlist</h1>
-        <p class="mt-1 text-sm text-slate-500">Saved products stay here until you move or remove them.</p>
-    </div>
+    <header>
+        <h1 class="font-display text-3xl font-semibold tracking-tight text-stone-900">Wishlist</h1>
+        <p class="mt-1 text-sm text-stone-500">Saved products stay here until you move or remove them.</p>
+    </header>
 
     @if ($notice)
-        <p class="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800" wire:key="wishlist-notice">{{ $notice }}</p>
+        <p class="alert alert-warn" wire:key="wishlist-notice">{{ $notice }}</p>
     @endif
 
     @if ($this->items->isEmpty())
-        <div class="rounded-lg border border-slate-200 bg-white p-10 text-center" wire:key="wishlist-empty">
-            <p class="text-lg font-semibold text-slate-900">Nothing saved yet</p>
-            <p class="mt-1 text-sm text-slate-500">Open a product page and save it to keep it here.</p>
-            <a href="{{ route('home') }}"
-               class="mt-5 inline-block rounded-md bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-500">
-                Browse the catalog
-            </a>
+        <div class="flex flex-col items-center rounded-xl border border-stone-200 bg-white px-6 py-16 text-center" wire:key="wishlist-empty">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.5" class="h-10 w-10 text-stone-300" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/>
+            </svg>
+            <p class="mt-4 font-display text-xl font-semibold text-stone-900">Nothing saved yet</p>
+            <p class="mt-2 max-w-sm text-sm text-stone-500">
+                Open a product page and tap the heart to keep it here.
+            </p>
+            <a href="{{ route('home') }}" class="btn-primary mt-6">Browse the catalog</a>
         </div>
     @else
-        <div class="grid gap-4 md:grid-cols-2" wire:key="wishlist-rows">
+        <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3" wire:key="wishlist-rows">
             @foreach ($this->items as $row)
-                <article class="flex gap-4 rounded-lg border border-slate-200 bg-white p-4"
+                @php($stocked = $row->product->is_active
+                    && $row->product->variants->first(fn ($v): bool => (int) $v->stock > 0) !== null)
+                <article class="flex flex-col overflow-hidden rounded-xl border border-stone-200 bg-white"
                          wire:key="wishlist-{{ $row->id }}">
-                    <img src="{{ $row->product->images->first()?->url() }}"
-                         alt="{{ $row->product->name }}"
-                         class="h-28 w-24 shrink-0 rounded-md border border-slate-200 object-cover">
+                    <a href="{{ route('products.show', $row->product->slug) }}" class="block bg-stone-100" aria-label="{{ $row->product->name }}">
+                        <img src="{{ $row->product->images->first()?->url() }}"
+                             alt="{{ $row->product->name }}"
+                             class="aspect-[4/5] w-full object-cover">
+                    </a>
 
-                    <div class="grow">
-                        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">
-                            {{ $row->product->category?->name }}
-                        </p>
+                    <div class="flex grow flex-col p-4">
+                        <p class="eyebrow">{{ $row->product->category?->name }}</p>
                         <a href="{{ route('products.show', $row->product->slug) }}"
-                           class="font-semibold text-slate-900 hover:text-sky-700">
+                           class="mt-1 font-display text-lg leading-snug text-stone-900 transition-colors hover:text-stone-950 hover:underline">
                             {{ $row->product->name }}
                         </a>
-                        <p class="mt-1 text-sm text-slate-500">
-                            from Rp {{ number_format((float) $row->product->base_price, 0, ',', '.') }}
+                        <p class="mt-1 text-sm text-stone-500">
+                            Starting from
+                            <span class="font-semibold text-stone-900 tabular-nums">
+                                Rp {{ number_format((float) $row->product->base_price, 0, ',', '.') }}
+                            </span>
                         </p>
 
                         @if (! $row->product->is_active)
-                            <p class="mt-2 text-sm text-slate-500">No longer on sale.</p>
-                        @elseif ($row->product->variants->first(fn ($v): bool => (int) $v->stock > 0) === null)
-                            <p class="mt-2 text-sm text-slate-500">Out of stock for now.</p>
+                            <p class="mt-2 text-sm text-stone-500">No longer on sale.</p>
+                        @elseif (! $stocked)
+                            <p class="mt-2 text-sm text-stone-500">Out of stock for now.</p>
                         @else
-                            <p class="mt-2 text-sm text-emerald-700">In stock</p>
+                            <p class="mt-2 text-sm font-medium text-emerald-700">In stock</p>
                         @endif
 
-                        <div class="mt-3 flex flex-wrap gap-3">
+                        <div class="mt-auto flex flex-wrap items-center gap-3 pt-4">
                             <button type="button" wire:click="moveToCart({{ $row->id }})"
-                                    @if (! $row->product->is_active
-                                        || $row->product->variants->first(fn ($v): bool => (int) $v->stock > 0) === null) disabled @endif
-                                    class="rounded-md px-4 py-2 text-sm font-semibold text-white {{ (! $row->product->is_active || $row->product->variants->first(fn ($v): bool => (int) $v->stock > 0) === null) ? 'cursor-not-allowed bg-slate-300' : 'bg-sky-600 hover:bg-sky-500' }}">
+                                    @if (! $stocked) disabled @endif
+                                    class="btn-primary px-4 py-2">
                                 Move to cart
                             </button>
 
                             <button type="button" wire:click="remove({{ $row->id }})"
-                                    class="text-sm font-medium text-red-600 hover:underline">
+                                    class="text-sm font-medium text-stone-400 transition-colors hover:text-red-600">
                                 Remove
                             </button>
                         </div>
