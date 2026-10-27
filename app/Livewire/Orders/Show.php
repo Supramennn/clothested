@@ -3,9 +3,12 @@
 namespace App\Livewire\Orders;
 
 use App\Models\Order;
-use App\Services\OrderService;
+use App\Models\Payment;
+use App\Services\MidtransException;
+use App\Services\MidtransPaymentService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -49,7 +52,7 @@ class Show extends Component
     /**
      * FR-40: cancel only while pending; the service returns the stock.
      */
-    public function cancel(OrderService $orders): void
+    public function cancel(MidtransPaymentService $payments): void
     {
         if (! $this->order->isCancellable()) {
             $this->notice = 'This order can no longer be cancelled.';
@@ -57,11 +60,66 @@ class Show extends Component
             return;
         }
 
-        $orders->cancel($this->order);
+        try {
+            $payments->cancelPendingOrder($this->order);
+        } catch (MidtransException $exception) {
+            $this->notice = $exception->getMessage();
+
+            return;
+        } catch (ValidationException $exception) {
+            $this->notice = $exception->errors()['order'][0] ?? 'This order can no longer be cancelled.';
+
+            return;
+        }
 
         unset($this->order);
 
         $this->notice = 'Order cancelled. The reserved stock is back in the catalog.';
+    }
+
+    public function startPayment(MidtransPaymentService $payments): void
+    {
+        if (! $this->order->isCancellable() || $this->order->payment !== null) {
+            $this->notice = 'This order already has a payment or can no longer be paid.';
+
+            return;
+        }
+
+        try {
+            $snapUrl = $payments->createSnapTransaction($this->order);
+        } catch (MidtransException $exception) {
+            $this->notice = $exception->getMessage();
+
+            return;
+        } catch (ValidationException $exception) {
+            $this->notice = $exception->errors()['payment'][0] ?? 'This order can no longer start a payment.';
+
+            return;
+        }
+
+        $this->redirect($snapUrl, navigate: false);
+    }
+
+    public function checkPaymentStatus(MidtransPaymentService $payments): void
+    {
+        $payment = $this->order->payment;
+
+        if (! $payment instanceof Payment) {
+            $this->notice = 'No payment session has been started for this order.';
+
+            return;
+        }
+
+        try {
+            $payment = $payments->refreshPayment($payment);
+        } catch (MidtransException $exception) {
+            $this->notice = $exception->getMessage();
+
+            return;
+        }
+
+        unset($this->order);
+        $this->notice = 'Payment status: '.str_replace('_', ' ', ucfirst($payment->transaction_status)).'.';
     }
 
     public function render(): View

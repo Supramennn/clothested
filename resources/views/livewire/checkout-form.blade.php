@@ -152,7 +152,7 @@
                 </button>
 
                 <p class="mt-3 text-xs text-stone-400">
-                    Placing the order reserves the stock. The Midtrans payment step connects here in the next milestone.
+                    Placing the order reserves stock and opens Midtrans Snap for payment.
                 </p>
             </aside>
         </form>

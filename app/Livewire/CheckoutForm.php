@@ -3,6 +3,8 @@
 namespace App\Livewire;
 
 use App\Models\CartItem;
+use App\Services\MidtransException;
+use App\Services\MidtransPaymentService;
 use App\Services\OrderService;
 use App\Support\Price;
 use Illuminate\Contracts\View\View;
@@ -152,10 +154,9 @@ class CheckoutForm extends Component
     }
 
     /**
-     * FR-37/FR-38: hand the cart to the service, then continue the customer to
-     * their pending order. Payment continues from the order page in Phase 6.
+     * FR-37/FR-38: create the order atomically, then continue directly to Snap.
      */
-    public function placeOrder(OrderService $orders): void
+    public function placeOrder(OrderService $orders, MidtransPaymentService $payments): void
     {
         $this->validate();
 
@@ -179,7 +180,16 @@ class CheckoutForm extends Component
             ] : null,
         ]);
 
-        $this->redirect(route('orders.show', $order->order_code));
+        try {
+            $snapUrl = $payments->createSnapTransaction($order);
+        } catch (MidtransException) {
+            session()->flash('error', 'Your order was created, but payment could not be opened. Try again from the order page.');
+            $this->redirect(route('orders.show', $order->order_code));
+
+            return;
+        }
+
+        $this->redirect($snapUrl, navigate: false);
     }
 
     public function render(): View

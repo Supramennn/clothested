@@ -100,6 +100,24 @@
                             Pay before {{ $order->payment->expiry_time->format('d M Y, H:i') }}.
                         </p>
                     @endif
+                    @if ($order->payment->transaction_status === 'pending')
+                        <p class="mt-2 text-sm leading-relaxed text-stone-500">
+                            Complete payment in the Midtrans Snap window. If you have already paid, check the latest status here.
+                        </p>
+                        <button type="button" wire:click="checkPaymentStatus" class="btn-outline mt-4">
+                            Check payment status
+                        </button>
+                    @endif
+                </section>
+            @elseif ($order->isCancellable())
+                <section class="card p-5" wire:key="order-payment">
+                    <h2 class="font-display text-lg font-semibold text-stone-900">Payment</h2>
+                    <p class="mt-2 text-sm leading-relaxed text-stone-500">
+                        Start the secure Midtrans Snap payment for this pending order.
+                    </p>
+                    <button type="button" wire:click="startPayment" class="btn-primary mt-4">
+                        Continue to Midtrans Snap
+                    </button>
                 </section>
             @endif
 

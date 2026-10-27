@@ -1,5 +1,7 @@
 <?php
 
+$midtransIsProduction = filter_var(env('MIDTRANS_IS_PRODUCTION', false), FILTER_VALIDATE_BOOL);
+
 return [
 
     /*
@@ -33,6 +35,18 @@ return [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
+    ],
+
+    'midtrans' => [
+        'server_key' => env('MIDTRANS_SERVER_KEY'),
+        'client_key' => env('MIDTRANS_CLIENT_KEY'),
+        'merchant_id' => env('MIDTRANS_MERCHANT_ID'),
+        'api_url' => $midtransIsProduction
+            ? 'https://api.midtrans.com'
+            : 'https://api.sandbox.midtrans.com',
+        'snap_url' => $midtransIsProduction
+            ? 'https://app.midtrans.com'
+            : 'https://app.sandbox.midtrans.com',
     ],
 
 ];

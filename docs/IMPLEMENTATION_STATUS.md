@@ -15,8 +15,8 @@ Status values: `done` / `partial` / `not started`.
 | 2 | Authentication, roles, middleware, profile (FR-01..FR-08) | done |
 | 3 | Storefront catalog and product detail (FR-09..FR-24) | done |
 | 4 | Cart and wishlist (FR-25..FR-31) | done |
-| 5 | Checkout, OrderService, stock reservation (FR-32..FR-40) | partial (FR-38 continues in Phase 6) |
-| 6 | Midtrans payment, webhook, expiry (FR-41..FR-47) | not started |
+| 5 | Checkout, OrderService, stock reservation (FR-32..FR-40) | done |
+| 6 | Midtrans payment, webhook, expiry (FR-41..FR-47) | partial (admin payment-failure detail continues in Phase 7) |
 | 7 | Order lifecycle and admin panel (FR-48..FR-57) | not started |
 | 8 | Real-time chat with Reverb (FR-58..FR-64) | not started |
 | 9 | Non-functional hardening, full test pass, README | not started |
@@ -128,9 +128,27 @@ Status values: `done` / `partial` / `not started`.
   pending-only and restores reserved stock once. Tests cover stale-stock rollback,
   totals, order codes, ownership, and cancellation (`tests/Feature/CheckoutTest.php`,
   `tests/Feature/OrdersTest.php`).
-- FR-38 is partial by design at this milestone: successful checkout leaves the
-  order pending and opens its order page; the Snap transaction and payment redirect
-  belong to Phase 6.
+
+## Midtrans Payment and Expiry (Phase 6)
+
+- `MidtransPaymentService` creates a Snap transaction over Laravel's HTTP client,
+  enables bank transfer, GoPay, QRIS, and card, applies the configurable expiry,
+  and stores one payment per order. Checkout redirects directly to the trusted
+  Midtrans-hosted payment URL; orders with a failed session can retry from the
+  order page.
+- `POST /api/midtrans/callback` verifies SHA-512 signatures, stores valid webhook
+  payloads, reconfirms status and amount with Midtrans, and returns HTTP 200 for
+  invalid or failed notifications. Confirmed settlement/capture finalizes stock;
+  deny/cancel/expiry releases it idempotently.
+- Order details provide a server-side status check and show payment state/expiry.
+  `midtrans:expire-pending` is scheduled every five minutes to expire overdue
+  provider transactions and release stock for orders whose Snap request failed.
+- Payment configuration is read from the existing `MIDTRANS_*` environment
+  variables; no SDK or database schema changes were added.
+- Tests: `tests/Feature/MidtransPaymentTest.php` covers Snap redirect and payload,
+  signature rejection, idempotent settlement, failure/cancellation, status checks,
+  and expiry. The admin order detail surface for logged payment failures is part
+  of Phase 7, so FR-47 remains partial until that surface exists.
 
 ## Functional Requirements
 
@@ -173,16 +191,16 @@ Status values: `done` / `partial` / `not started`.
 | FR-35 | Flat shipping fee from config | OrderService | done | `config/clothested.php`, `app/Services/OrderService.php` |
 | FR-36 | Subtotal + fee = total, customer note | CheckoutForm | done | `app/Livewire/CheckoutForm.php` |
 | FR-37 | Atomic order creation with TRX code + stock reserve | OrderService | done | `app/Services/OrderService.php` |
-| FR-38 | Straight to Snap page; order stays pending | CheckoutForm | partial | `app/Livewire/CheckoutForm.php`; Midtrans handoff in Phase 6 |
+| FR-38 | Straight to Snap page; order stays pending | CheckoutForm | done | `app/Livewire/CheckoutForm.php`, `app/Services/MidtransPaymentService.php` |
 | FR-39 | Customer sees only own orders | Orders pages | done | `app/Livewire/Orders/Index.php`, `app/Livewire/Orders/Show.php` |
 | FR-40 | Customer cancellation only while pending | Orders pages | done | `app/Services/OrderService.php`, `app/Livewire/Orders/Show.php` |
-| FR-41 | Snap payment types, gross_amount = total | MidtransPaymentService | not started | — |
-| FR-42 | One payment per order, unique midtrans id | Schema + service | partial | `database/migrations/2026_10_26_081242_create_payments_table.php` |
-| FR-43 | Waiting page with check-status button | CheckoutForm | not started | — |
-| FR-44 | Webhook verifies SHA-512, idempotent, always HTTP 200 | WebhookController | not started | — |
-| FR-45 | Settlement/capture → processing, filled paid_at | MidtransPaymentService | not started | — |
-| FR-46 | Expire/cancel/deny → cancelled + stock release | MidtransPaymentService | not started | — |
-| FR-47 | raw_payload stored, failures logged | WebhookController | not started | — |
+| FR-41 | Snap payment types, gross_amount = total | MidtransPaymentService | done | `app/Services/MidtransPaymentService.php` |
+| FR-42 | One payment per order, unique midtrans id | Schema + service | done | `database/migrations/2026_10_26_081242_create_payments_table.php`, `app/Services/MidtransPaymentService.php` |
+| FR-43 | Waiting page with check-status button | Order detail | done | `app/Livewire/Orders/Show.php`, `resources/views/livewire/orders/show.blade.php` |
+| FR-44 | Webhook verifies SHA-512, idempotent, always HTTP 200 | WebhookController | done | `app/Http/Controllers/WebhookController.php`, `app/Services/MidtransPaymentService.php`, `routes/api.php` |
+| FR-45 | Settlement/capture → processing, filled paid_at | MidtransPaymentService | done | `app/Services/MidtransPaymentService.php` |
+| FR-46 | Expire/cancel/deny → cancelled + stock release | MidtransPaymentService | done | `app/Services/MidtransPaymentService.php`, `app/Console/Commands/ExpireMidtransPayments.php` |
+| FR-47 | raw_payload stored, failures logged and admin-visible | Webhook + admin detail | partial | `app/Http/Controllers/WebhookController.php`, `app/Services/MidtransPaymentService.php`; admin detail in Phase 7 |
 | FR-48 | Dashboard sales summary + queue | Dashboard | not started | — |
 | FR-49 | Catalog CRUD with unique SKU | Admin catalog | not started | — |
 | FR-50 | Stock adjustments | Admin catalog | not started | — |
@@ -218,9 +236,9 @@ Status values: `done` / `partial` / `not started`.
 | A visitor pressing add-to-cart returns to the product page after sign-in (5.4) | done |
 | Courier checkout stock deduction + total | done |
 | order_code format and uniqueness | done |
-| Settlement webhook idempotent, paid_at filled | not started |
-| Wrong signature changes nothing | not started |
-| 24h expiry cancels and releases stock | not started |
+| Settlement webhook idempotent, paid_at filled | done |
+| Wrong signature changes nothing | done |
+| 24h expiry cancels and releases stock | done |
 | Pickup flow visible to customer | done |
 | Waybill required before shipped | not started |
 | Customer cancel only while pending, own orders only | done |
