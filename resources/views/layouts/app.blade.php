@@ -35,6 +35,7 @@
                     </a>
 
                     <a href="{{ route('wishlist') }}" class="btn-ghost">Wishlist</a>
+                    <a href="{{ route('orders.index') }}" class="btn-ghost">Orders</a>
                     <a href="{{ route('profile') }}" class="btn-ghost">Profile</a>
 
                     @if (in_array(auth()->user()?->role, ['admin', 'super_admin'], true))

@@ -15,7 +15,7 @@ Status values: `done` / `partial` / `not started`.
 | 2 | Authentication, roles, middleware, profile (FR-01..FR-08) | done |
 | 3 | Storefront catalog and product detail (FR-09..FR-24) | done |
 | 4 | Cart and wishlist (FR-25..FR-31) | done |
-| 5 | Checkout, OrderService, stock reservation (FR-32..FR-40) | not started |
+| 5 | Checkout, OrderService, stock reservation (FR-32..FR-40) | partial (FR-38 continues in Phase 6) |
 | 6 | Midtrans payment, webhook, expiry (FR-41..FR-47) | not started |
 | 7 | Order lifecycle and admin panel (FR-48..FR-57) | not started |
 | 8 | Real-time chat with Reverb (FR-58..FR-64) | not started |
@@ -115,6 +115,23 @@ Status values: `done` / `partial` / `not started`.
   (6) cover FR-25..FR-31 flows and the three Key Test Criteria of section 5.4;
   `productWithVariants()` moved to `tests/Pest.php` as a shared helper.
 
+## Checkout and Orders (Phase 5)
+
+- `CheckoutForm` (`app/Livewire/CheckoutForm.php`) requires authentication, guides
+  customers with an empty cart back to the catalog, supports pickup or courier
+  delivery, validates the courier address, and previews the configured flat fee
+  and optional note.
+- `OrderService` (`app/Services/OrderService.php`) locks cart rows and SKU rows
+  in a stable order, rechecks live stock, snapshots prices and variant labels,
+  reserves stock, stores courier addresses, and clears the cart atomically.
+- Customer order pages are scoped to the signed-in customer; cancellation is
+  pending-only and restores reserved stock once. Tests cover stale-stock rollback,
+  totals, order codes, ownership, and cancellation (`tests/Feature/CheckoutTest.php`,
+  `tests/Feature/OrdersTest.php`).
+- FR-38 is partial by design at this milestone: successful checkout leaves the
+  order pending and opens its order page; the Snap transaction and payment redirect
+  belong to Phase 6.
+
 ## Functional Requirements
 
 | FR | Requirement | Module | Status | Files |
@@ -141,24 +158,24 @@ Status values: `done` / `partial` / `not started`.
 | FR-20 | Add to cart blocks zero stock SKU | ProductDetail | done | `app/Livewire/ProductDetail.php` (`addToCart`) |
 | FR-21 | Wishlist toggle at product level | ProductDetail | done | `app/Livewire/ProductDetail.php` (`toggleWishlist`), page `app/Livewire/Wishlist.php` |
 | FR-22 | Inactive product page 404 | ProductDetail | done | `app/Livewire/ProductDetail.php` |
-| FR-23 | Price snapshot at checkout | OrderService (FR-37) | partial | snapshot columns exist since Phase 1; values are written at checkout in Phase 5 |
+| FR-23 | Price snapshot at checkout | OrderService (FR-37) | done | `app/Services/OrderService.php` |
 | FR-24 | Publish only with at least one variant | Product scope | done | `app/Models/Product.php` (`active()` scope requires variants); admin publish form follows in Phase 7 |
 | FR-25 | Login-required add to cart with return URL | CartManager | done | `app/Livewire/ProductDetail.php` + `app/Livewire/Auth/Login.php` (`url.intended`) |
 | FR-26 | Same SKU merges into one row | CartManager | done | `app/Models/CartItem.php` (`mergeAdd`) |
 | FR-27 | Quantity clipped to 1..30 and stock | CartManager | done | `app/Livewire/CartManager.php` (`setQty`) |
 | FR-28 | Instant subtotal updates | CartManager | done | `app/Livewire/CartManager.php`, `resources/views/livewire/cart-manager.blade.php` |
-| FR-29 | Stock recheck at checkout | OrderService | partial | cart flags in `app/Livewire/CartManager.php`; sold-out block lands in Phase 5 |
+| FR-29 | Stock recheck at checkout | OrderService | done | `app/Livewire/CheckoutForm.php`, `app/Services/OrderService.php` |
 | FR-30 | Wishlist move to cart uses first available variant | Wishlist | done | `app/Livewire/Wishlist.php` (`moveToCart`) |
 | FR-31 | Cart and wishlist persist per account | Tables | done | `database/migrations/2026_10_26_081243_create_cart_items_table.php`, tests in `tests/Feature/CartManagerTest.php` |
-| FR-32 | Checkout requires login; empty cart guidance | CheckoutForm | not started | — |
-| FR-33 | Pickup or courier method | CheckoutForm | not started | — |
-| FR-34 | Address form required fields | CheckoutForm | not started | — |
-| FR-35 | Flat shipping fee from config | OrderService | not started | — |
-| FR-36 | Subtotal + fee = total, customer note | CheckoutForm | not started | — |
-| FR-37 | Atomic order creation with TRX code + stock reserve | OrderService | not started | — |
-| FR-38 | Straight to Snap page; order stays pending | CheckoutForm | not started | — |
-| FR-39 | Customer sees only own orders | Orders pages | not started | — |
-| FR-40 | Customer cancellation only while pending | Orders pages | partial | `app/Models/Order.php` |
+| FR-32 | Checkout requires login; empty cart guidance | CheckoutForm | done | `app/Livewire/CheckoutForm.php`, `resources/views/livewire/checkout-form.blade.php` |
+| FR-33 | Pickup or courier method | CheckoutForm | done | `app/Livewire/CheckoutForm.php` |
+| FR-34 | Address form required fields | CheckoutForm | done | `app/Livewire/CheckoutForm.php` |
+| FR-35 | Flat shipping fee from config | OrderService | done | `config/clothested.php`, `app/Services/OrderService.php` |
+| FR-36 | Subtotal + fee = total, customer note | CheckoutForm | done | `app/Livewire/CheckoutForm.php` |
+| FR-37 | Atomic order creation with TRX code + stock reserve | OrderService | done | `app/Services/OrderService.php` |
+| FR-38 | Straight to Snap page; order stays pending | CheckoutForm | partial | `app/Livewire/CheckoutForm.php`; Midtrans handoff in Phase 6 |
+| FR-39 | Customer sees only own orders | Orders pages | done | `app/Livewire/Orders/Index.php`, `app/Livewire/Orders/Show.php` |
+| FR-40 | Customer cancellation only while pending | Orders pages | done | `app/Services/OrderService.php`, `app/Livewire/Orders/Show.php` |
 | FR-41 | Snap payment types, gross_amount = total | MidtransPaymentService | not started | — |
 | FR-42 | One payment per order, unique midtrans id | Schema + service | partial | `database/migrations/2026_10_26_081242_create_payments_table.php` |
 | FR-43 | Waiting page with check-status button | CheckoutForm | not started | — |
@@ -199,12 +216,12 @@ Status values: `done` / `partial` / `not started`.
 | Adding the same SKU twice keeps one row with a combined quantity (5.4) | done |
 | Quantity 40 with stock 12 is clipped to 12 with a message (5.4) | done |
 | A visitor pressing add-to-cart returns to the product page after sign-in (5.4) | done |
-| Courier checkout stock deduction + total | not started |
-| order_code format and uniqueness | not started |
+| Courier checkout stock deduction + total | done |
+| order_code format and uniqueness | done |
 | Settlement webhook idempotent, paid_at filled | not started |
 | Wrong signature changes nothing | not started |
 | 24h expiry cancels and releases stock | not started |
-| Pickup flow visible to customer | not started |
+| Pickup flow visible to customer | done |
 | Waybill required before shipped | not started |
-| Customer cancel only while pending, own orders only | not started |
+| Customer cancel only while pending, own orders only | done |
 | Chat messages realtime both sides, one open session | not started |

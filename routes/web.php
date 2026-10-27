@@ -6,6 +6,9 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\CartManager;
 use App\Livewire\CatalogPage;
+use App\Livewire\CheckoutForm;
+use App\Livewire\Orders\Index as OrdersIndex;
+use App\Livewire\Orders\Show as OrdersShow;
 use App\Livewire\ProductDetail;
 use App\Livewire\Profile;
 use App\Livewire\Wishlist;
@@ -24,6 +27,9 @@ Route::middleware('auth')->group(function (): void {
     Route::livewire('/profile', Profile::class)->name('profile');
     Route::livewire('/cart', CartManager::class)->name('cart');
     Route::livewire('/wishlist', Wishlist::class)->name('wishlist');
+    Route::livewire('/checkout', CheckoutForm::class)->name('checkout');
+    Route::livewire('/orders', OrdersIndex::class)->name('orders.index');
+    Route::livewire('/orders/{orderCode}', OrdersShow::class)->name('orders.show');
 
     Route::post('/logout', LogoutController::class)->name('logout');
 });

@@ -101,8 +101,12 @@
                     </span>
                 </div>
                 <p class="mt-2 text-xs text-stone-400">
-                    The shipping fee is added at checkout. Checkout, with payment, arrives with the next milestone.
+                    The shipping fee is added at checkout.
                 </p>
+
+                <a href="{{ route('checkout') }}" class="btn-primary mt-4 w-full">
+                    Checkout
+                </a>
             </aside>
         </div>
     @endif

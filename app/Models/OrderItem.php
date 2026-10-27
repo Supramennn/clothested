@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['order_id', 'product_variant_id', 'product_name', 'variant_label', 'unit_price', 'quantity', 'line_total'])]
 class OrderItem extends Model
 {
+    public $timestamps = false;
+
     /**
      * Get the attributes that should be cast.
      *
