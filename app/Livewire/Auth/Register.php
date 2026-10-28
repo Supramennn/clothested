@@ -13,7 +13,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('Register — ClothesTed')]
+#[Title('Register · ClothesTed')]
 class Register extends Component
 {
     public string $name = '';
@@ -47,7 +47,7 @@ class Register extends Component
      * FR-02: a successful registration creates the customer account, signs
      * the user in immediately, and lands on the store home. Non-functional
      * requirement: repeated sign-up attempts from one address are capped,
-     * and successes do not reset the counter — mass account creation from
+     * and successes do not reset the counter, so mass account creation from
      * one address stays capped too.
      */
     public function register(): void

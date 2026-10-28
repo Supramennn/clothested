@@ -16,7 +16,7 @@ use Livewire\WithPagination;
  * FR-39: the signed-in customer's own order history.
  */
 #[Layout('layouts.app')]
-#[Title('Orders — ClothesTed')]
+#[Title('Orders · ClothesTed')]
 class Index extends Component
 {
     use WithPagination;

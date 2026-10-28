@@ -16,7 +16,7 @@ use Livewire\Component;
  * The account-owned cart page; every row points at one SKU.
  */
 #[Layout('layouts.app')]
-#[Title('Cart — ClothesTed')]
+#[Title('Cart · ClothesTed')]
 class CartManager extends Component
 {
     /**

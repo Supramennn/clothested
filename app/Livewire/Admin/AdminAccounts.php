@@ -12,7 +12,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('Admin accounts | ClothesTed')]
+#[Title('Admin accounts · ClothesTed')]
 class AdminAccounts extends Component
 {
     public ?int $editingAdminId = null;

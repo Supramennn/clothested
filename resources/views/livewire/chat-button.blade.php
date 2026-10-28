@@ -6,7 +6,7 @@
     </svg>
     Chat
     @if ($this->unread > 0)
-        <span class="rounded-full bg-stone-900 px-2 py-0.5 text-xs font-semibold text-white" wire:key="chat-badge">
+        <span class="rounded-full bg-black px-2 py-0.5 text-xs font-medium text-white" wire:key="chat-badge">
             {{ $this->unread }}
         </span>
     @endif

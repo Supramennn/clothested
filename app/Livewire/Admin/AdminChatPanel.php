@@ -19,7 +19,7 @@ use Livewire\Component;
  * the right, and the first reply claims the session.
  */
 #[Layout('layouts.app')]
-#[Title('Chat panel — ClothesTed')]
+#[Title('Chat panel · ClothesTed')]
 class AdminChatPanel extends Component
 {
     public ?int $sessionId = null;

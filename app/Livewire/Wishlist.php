@@ -19,7 +19,7 @@ use Livewire\Component;
  * is imported under a distinct alias.
  */
 #[Layout('layouts.app')]
-#[Title('Wishlist — ClothesTed')]
+#[Title('Wishlist · ClothesTed')]
 class Wishlist extends Component
 {
     public ?string $notice = null;

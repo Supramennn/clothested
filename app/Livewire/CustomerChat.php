@@ -21,7 +21,7 @@ use Livewire\Component;
  * optional order context and a fresh start after the old session closed.
  */
 #[Layout('layouts.app')]
-#[Title('Chat — ClothesTed')]
+#[Title('Chat · ClothesTed')]
 class CustomerChat extends Component
 {
     #[Url]

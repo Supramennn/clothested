@@ -4,8 +4,8 @@
     <header class="flex flex-wrap items-end justify-between gap-3">
         <div>
             <p class="eyebrow">Catalog</p>
-            <h1 class="mt-1 font-display text-3xl font-semibold tracking-tight text-stone-900">Products</h1>
-            <p class="mt-2 text-sm text-stone-600">Manage product details, SKUs, publication, and stock.</p>
+            <h1 class="type-display-lg mt-1 text-black">Products</h1>
+            <p class="mt-2 text-sm text-zinc-600">Manage product details, SKUs, publication, and stock.</p>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('admin.categories') }}" class="btn-outline min-h-11">Manage categories</a>
@@ -30,10 +30,10 @@
 
     @if ($this->products->isEmpty())
         <div class="card px-5 py-12 text-center">
-            <h2 class="font-display text-xl font-semibold text-stone-900">
+            <h2 class="type-heading-lg text-black">
                 {{ $search === '' ? 'No products yet' : 'No products match this search' }}
             </h2>
-            <p class="mt-2 text-sm text-stone-600">
+            <p class="mt-2 text-sm text-zinc-600">
                 {{ $search === '' ? 'Add a product to start building the catalog.' : 'Try a different product name.' }}
             </p>
             @if ($search === '')
@@ -44,11 +44,11 @@
         <div class="space-y-4">
             @foreach ($this->products as $product)
                 <article wire:key="product-{{ $product->id }}" class="card overflow-hidden">
-                    <header class="flex flex-wrap items-start justify-between gap-4 border-b border-stone-200 p-4 sm:p-5">
+                    <header class="flex flex-wrap items-start justify-between gap-4 border-b border-zinc-200 p-4 sm:p-5">
                         <div class="min-w-0">
-                            <p class="text-sm text-stone-600">{{ $product->category->name }} · /{{ $product->slug }}</p>
-                            <h2 class="mt-1 font-display text-xl font-semibold text-stone-900">{{ $product->name }}</h2>
-                            <p class="mt-1 text-sm text-stone-600">
+                            <p class="text-sm text-zinc-600">{{ $product->category->name }} · /{{ $product->slug }}</p>
+                            <h2 class="type-heading-md mt-1 text-black">{{ $product->name }}</h2>
+                            <p class="mt-1 text-sm text-zinc-600">
                                 {{ \App\Support\Price::format($product->base_price) }}
                                 · {{ $product->is_active ? 'Published' : 'Draft' }}
                                 @if ($product->is_featured) · Featured @endif
@@ -65,14 +65,14 @@
                     </header>
 
                     @if ($product->variants->isEmpty())
-                        <p class="px-4 py-4 text-sm text-stone-600">No SKUs. Add a variant before publishing this product.</p>
+                        <p class="px-4 py-4 text-sm text-zinc-600">No SKUs. Add a variant before publishing this product.</p>
                     @else
-                        <ul class="divide-y divide-stone-100">
+                        <ul class="divide-y divide-zinc-100">
                             @foreach ($product->variants as $variant)
                                 <li wire:key="variant-{{ $variant->id }}" class="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-4 sm:px-5">
                                     <div class="min-w-0">
-                                        <p class="font-medium text-stone-900">{{ $variant->sku }}</p>
-                                        <p class="mt-1 text-sm text-stone-600">{{ $variant->color }} / {{ $variant->size }}</p>
+                                        <p class="font-medium text-zinc-900">{{ $variant->sku }}</p>
+                                        <p class="mt-1 text-sm text-zinc-600">{{ $variant->color }} / {{ $variant->size }}</p>
                                     </div>
                                     <form wire:submit="adjustStock({{ $variant->id }})" class="flex flex-wrap items-end gap-2">
                                         <div>

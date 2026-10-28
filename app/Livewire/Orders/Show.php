@@ -21,7 +21,7 @@ use Livewire\Component;
  * the order is still pending.
  */
 #[Layout('layouts.app')]
-#[Title('Order — ClothesTed')]
+#[Title('Order · ClothesTed')]
 class Show extends Component
 {
     public string $orderCode = '';

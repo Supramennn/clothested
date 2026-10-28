@@ -10,7 +10,7 @@ use Livewire\Livewire;
 
 /**
  * Phase 9: the nonfunctional requirements of PRD section 6 that the
- * application itself can prove — rate limits, SEO, and structured logs.
+ * application itself can prove: rate limits, SEO, and structured logs.
  */
 test('sign-up attempts from one address are capped (security)', function () {
     for ($i = 1; $i <= 5; $i++) {
@@ -50,7 +50,7 @@ test('the product page carries its title, description, and structured data (SEO)
     $response = $this->get('/products/structured-dress');
 
     $response->assertOk()
-        ->assertSee('<title>Structured Dress — ClothesTed</title>', false)
+        ->assertSee('<title>Structured Dress · ClothesTed</title>', false)
         ->assertSee('<meta name="description"', false)
         ->assertSee('A structured dress story with honest labels.', false)
         ->assertSee('application/ld+json', false)
@@ -65,7 +65,7 @@ test('the product page carries its title, description, and structured data (SEO)
 test('the catalog page keeps a clear title and description (SEO)', function () {
     $this->get('/')
         ->assertOk()
-        ->assertSee('<title>Catalog — ClothesTed</title>', false)
+        ->assertSee('<title>Catalog · ClothesTed</title>', false)
         ->assertSee('<meta name="description"', false)
         ->assertSee('New arrivals and wardrobe staples', false);
 });

@@ -4,68 +4,170 @@
 @source '../../storage/framework/views/*.php';
 
 /*
-    ClothesTed visual system:
-    - Warm stone neutrals (not blue-grey) so white surfaces read as paper,
-      with hairline borders doing the separation work.
-    - Sky is the single accent and stays at the primary action moment only;
-      selected options turn near-black instead of echoing the accent.
-    - Playfair Display carries the fashion-editorial voice on the brand and
-      page titles; Instrument Sans keeps body and prices readable.
-    - Radius set: surfaces rounded-xl, controls rounded-md, full only for
-      count and status badges.
-    - Motion hud: hover-state transitions only, no loops.
+    ClothesTed visual system, per DESIGN.md (Shopifi-inspired):
+    - Two canvas tracks that never blend: cinematic near-black for the
+      storefront hero and footer, white or cream for transactional surfaces.
+    - One black pill button vocabulary; radius scale xs 4 / sm 5 / md 8 /
+      lg 12 / xl 20 is reserved for inputs, cards, and photo frames.
+    - Aloe and pistachio greens live on the light track only and mark the
+      featured moments; the shade ladder maps to Tailwind zinc.
+    - Inter carries display (light 330 cut) and UI body; the OpenType ss03
+      stylistic set is on globally as the typographic signature.
+    - Motion dials: hover-state transitions only, no loops.
 */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
-    --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+    --font-display: 'Inter', Helvetica, Arial, sans-serif;
+
+    --color-cream: #fbfbf5;
+    --color-night: #000000;
+    --color-night-elevated: #0a0a0a;
+    --color-surface-dark: #1e2c31;
+    --color-ink: #000000;
+    --color-hairline: #e4e4e7;
+    --color-hairline-dark: #1e2c31;
+    --color-aloe: #c1fbd4;
+    --color-pistachio: #d4f9e0;
+    --color-link-cool-1: #9dabad;
+    --color-link-cool-2: #9797a2;
+    --color-link-cool-3: #bdbdca;
+    --color-link-mint: #99b3ad;
+
+    --radius-xs: 4px;
+    --radius-sm: 5px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 20px;
+}
+
+@layer base {
+    /* The OpenType signature of the brand, applied to every text role. */
+    body {
+        font-feature-settings: 'ss03';
+    }
 }
 
 @layer components {
-    /* Solid primary action; the one place sky appears every page. */
+    /* The dominant CTA: solid black pill, one geometry across the system. */
     .btn-primary {
-        @apply inline-flex items-center justify-center gap-2 rounded-md bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white
-            transition-colors hover:bg-sky-700
-            focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700
-            disabled:pointer-events-none disabled:bg-stone-200 disabled:text-stone-500;
+        @apply inline-flex items-center justify-center gap-2 rounded-full bg-black px-6 py-3 text-base font-[420]
+            text-white transition-colors hover:bg-zinc-700
+            focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black
+            disabled:pointer-events-none disabled:bg-zinc-200 disabled:text-zinc-400;
     }
 
-    /* Outlined secondary action for the supporting command in a group. */
+    /* Outlined pill on the light track; inverts to the solid state on hover. */
     .btn-outline {
-        @apply inline-flex items-center justify-center gap-2 rounded-md border border-stone-500 bg-white px-5 py-2.5 text-sm
-            font-semibold text-stone-700 transition-colors hover:border-stone-600 hover:text-stone-950
-            focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700
-            disabled:pointer-events-none disabled:border-stone-200 disabled:text-stone-400;
+        @apply inline-flex items-center justify-center gap-2 rounded-full border border-black bg-white px-6 py-3
+            text-base font-[420] text-black transition-colors hover:bg-black hover:text-white
+            focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black
+            disabled:pointer-events-none disabled:border-zinc-200 disabled:text-zinc-400;
+    }
+
+    /* Cinematic CTA: white-stroked pill on the black canvas. */
+    .btn-outline-dark {
+        @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-white bg-transparent px-6
+            py-3 text-base font-[420] text-white transition-colors hover:bg-white hover:text-black
+            focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white
+            disabled:pointer-events-none disabled:border-zinc-500 disabled:text-zinc-500;
+    }
+
+    /* Featured mint pill on the light track; aloe touches nothing else. */
+    .btn-aloe {
+        @apply inline-flex items-center justify-center gap-2 rounded-full bg-aloe px-6 py-3 text-base font-[420]
+            text-black transition-colors hover:bg-aloe/85
+            focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black
+            disabled:pointer-events-none disabled:bg-zinc-200 disabled:text-zinc-400;
     }
 
     /* Quiet text action inside navs, forms, and lists. */
     .btn-ghost {
-        @apply text-sm font-medium text-stone-600 transition-colors hover:text-stone-950
-            focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700;
+        @apply text-sm font-medium text-zinc-600 transition-colors hover:text-black
+            focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black;
+    }
+
+    /* Text action on the black canvas. */
+    .btn-ghost-dark {
+        @apply text-sm font-medium text-zinc-300 transition-colors hover:text-white
+            focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white;
     }
 
     .card {
-        @apply rounded-xl border border-stone-200 bg-white;
+        @apply rounded-lg border border-zinc-200 bg-white;
     }
 
-    /* Form fields share one silhouette everywhere. */
+    /* Dark-track card with the single permitted top-edge sheen (Level 1). */
+    .card-dark {
+        @apply rounded-lg border border-hairline-dark bg-night-elevated text-white;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    /* Light-track depth signature: stacked tiny shadows, soft paper halo. */
+    .card-elevated {
+        @apply rounded-lg border border-black/10 bg-white;
+        box-shadow:
+            0 8px 8px rgba(0, 0, 0, 0.1),
+            0 4px 4px rgba(0, 0, 0, 0.1),
+            0 2px 2px rgba(0, 0, 0, 0.1),
+            0 0 0 1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Form fields share one silhouette everywhere: 8px, hairline, 44px tall. */
     .input {
-        @apply w-full rounded-md border border-stone-500 bg-white px-3 py-2 text-sm text-stone-900
-            placeholder:text-stone-400 focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600
-            disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-500;
+        @apply w-full min-h-11 rounded-md border border-zinc-200 bg-white px-3 py-2 text-base font-[420] text-black
+            placeholder:text-zinc-500 focus:border-black focus:outline-none focus:ring-1 focus:ring-black
+            disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-500;
     }
 
     .field-label {
-        @apply block text-sm font-medium text-stone-700;
+        @apply block text-sm font-medium text-zinc-700;
     }
 
-    /* Small all-caps label; carries real metadata (category, column name). */
+    /* All-caps eyebrow above large headlines; real category labels only. */
     .eyebrow {
-        @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-400;
+        @apply text-xs font-normal uppercase tracking-[0.06em] text-zinc-600;
+    }
+
+    .eyebrow-dark {
+        @apply text-xs font-normal uppercase tracking-[0.06em] text-zinc-400;
+    }
+
+    /* Display tier: the thin cut is the brand; mobile stair built into clamp. */
+    .type-display {
+        @apply font-display text-[clamp(3.5rem,2.5rem+6vw,6rem)] font-[330] leading-none tracking-[2.4px];
+    }
+
+    .type-display-xl {
+        @apply font-display text-[clamp(2.75rem,2rem+4.5vw,4.375rem)] font-[330] leading-none;
+    }
+
+    .type-display-lg {
+        @apply font-display text-[clamp(2.25rem,1.8rem+3vw,3.4375rem)] font-[330] leading-[1.16];
+    }
+
+    .type-display-md {
+        @apply font-display text-[clamp(1.875rem,1.6rem+2vw,3rem)] font-[330] leading-[1.14];
+    }
+
+    .type-heading-xl {
+        @apply font-display text-[28px] font-medium leading-[1.28] tracking-[0.42px];
+    }
+
+    .type-heading-lg {
+        @apply font-display text-[24px] font-normal leading-[1.14] tracking-[0.36px];
+    }
+
+    .type-heading-md {
+        @apply font-display text-[20px] font-medium leading-[1.4] tracking-[0.3px];
+    }
+
+    .type-body-lg {
+        @apply text-xl font-[550] leading-[1.56];
     }
 
     .alert {
-        @apply rounded-lg border px-4 py-3 text-sm;
+        @apply rounded-md border px-4 py-3 text-sm;
     }
 
     .alert-danger {

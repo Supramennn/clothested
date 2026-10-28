@@ -11,7 +11,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('Login — ClothesTed')]
+#[Title('Login · ClothesTed')]
 class Login extends Component
 {
     public string $email = '';

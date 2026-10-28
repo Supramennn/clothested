@@ -16,7 +16,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
-#[Title('Sales report | ClothesTed')]
+#[Title('Sales report · ClothesTed')]
 class SalesReport extends Component
 {
     use WithPagination;

@@ -9,7 +9,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('Profile — ClothesTed')]
+#[Title('Profile · ClothesTed')]
 class Profile extends Component
 {
     public string $name = '';

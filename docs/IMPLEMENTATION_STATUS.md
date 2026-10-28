@@ -385,8 +385,33 @@ application itself owns:
 | Security | bcrypt hashing; mandatory HTTPS; CSRF protection; rate limit on login and registration; role middleware for admin | done | password hashing (bcrypt), `app/Providers/AppServiceProvider.php` (forceScheme https in production), `web` CSRF protection, `RateLimiter` in `app/Livewire/Auth/{Login,Register}.php`, `role` middleware (`EnsureRole.php`) |
 | Payment safety | Server key never in the browser; webhook verifies signature; logs hold no card data | done | `app/Services/MidtransPaymentService.php` (server-side keys, signature re-verification), log calls store IDs and statuses only |
 | Compatibility | Current Chrome/Edge/Firefox/Safari; intact from 360 to 1920 px; sharp images on retina | done | responsive Tailwind shell across phases (buttonless mobile menu, stacked layouts); placeholder images served numerically sized |
-| Accessibility | At least AA contrast; visible focus; explicit labels; keyboard navigation | done | restyled views: stone palette contrast, `focus` rings, `<label for>` forms, aria-labels and operable menus |
+| Accessibility | At least AA contrast; visible focus; explicit labels; keyboard navigation | done | restyled views: zinc shade-ladder contrast, `focus` rings, `<label for>` forms, aria-labels and operable menus |
 | SEO | Slug URLs; titles and meta per page; Product structured data on detail pages | done | `routes/web.php`, `#[Title]`/`@section('title')`, `@yield('meta_description')`, `ProductDetail::structuredData()` JSON-LD |
 | Observability | Structured logs for webhook, admin status changes, failures; 30-day retention | done | `OrderService::logTransition()` on 5 lifecycle methods, `WebhookController` info log, `MidtransPaymentService` failure logs, `LOG_STACK=daily` + `LOG_DAILY_DAYS=30` |
 | Availability and backup | 99% monthly target; daily PostgreSQL dumps kept 14 days; tested recovery procedure | done (app side) | `php artisan db:backup` + daily 01:00 schedule (`routes/console.php`), 14-day prune, restore verified against a scratch database; uptime target is an operations concern |
 | Privacy | Minimum data; addresses only for courier orders; manual account deletion by super admin | done | `OrderService`/`ShippingAddress` only for courier checkout, `app/Livewire/Admin/AdminAccounts.php` deletion, no marketing data collected |
+
+## Design Language (post-Phase 9 restyle)
+
+The UI was restyled to the Shopifi-inspired system in `DESIGN.md` while keeping
+every functional behavior and asserted copy string intact:
+
+- Two canvas tracks never blended: cinematic black (`bg-night`) for the catalog
+  hero and footer, white for transactional surfaces; aloe `#c1fbd4` and
+  pistachio `#d4f9e0` appear on the light track only (featured badge, processing
+  and ready-for-pickup status pills).
+- Tokens live in `resources/css/app.css` as Tailwind v4 `@theme` variables
+  (cream, night, surface-dark, hairline, aloe, pistachio, link-cool scale) with
+  the radius scale overridden to xs 4 / sm 5 / md 8 / lg 12 / xl 20.
+- One pill button vocabulary (`btn-primary`, `btn-outline`, `btn-outline-dark`,
+  `btn-aloe`); inputs stay 8px and cards 12px by design.
+- Typography: Inter via Google Fonts (display cut at weight 330, body 420-550),
+  `font-feature-settings: 'ss03'` globally, type tiers `type-display*`,
+  `type-heading*`, `type-body-lg`, eyebrow labels.
+- Page title separator is the interpunct (`·`) across all `#[Title]`
+  attributes, view `@section('title')` calls, and test assertions.
+- Verified after the restyle: `php artisan test --compact` 127 passed /
+  556 assertions, Pint clean, `npm run build`, and manual renders of `/`,
+  `/products/{slug}`, `/login`, `/register` all return 200 with the new
+  markup.
+

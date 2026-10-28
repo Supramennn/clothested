@@ -17,7 +17,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('Product form | ClothesTed')]
+#[Title('Product form · ClothesTed')]
 class Form extends Component
 {
     public ?int $productId = null;

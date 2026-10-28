@@ -3,10 +3,10 @@
 
     <header>
         <p class="eyebrow">Catalog</p>
-        <h1 class="mt-1 font-display text-3xl font-semibold tracking-tight text-stone-900">
+        <h1 class="type-display-lg mt-1 text-black">
             {{ $productId === null ? 'Add product' : 'Edit product' }}
         </h1>
-        <p class="mt-2 text-sm text-stone-600">Product details and purchasable SKUs.</p>
+        <p class="mt-2 text-sm text-zinc-600">Product details and purchasable SKUs.</p>
     </header>
 
     <form wire:submit="save" class="space-y-6">
@@ -43,22 +43,22 @@
             </div>
             <fieldset class="flex flex-wrap gap-x-6 gap-y-3 sm:col-span-2">
                 <legend class="field-label mb-2">Storefront status</legend>
-                <label class="inline-flex min-h-11 items-center gap-2 text-sm text-stone-700">
-                    <input type="checkbox" wire:model="isActive" class="size-4 accent-sky-700">
+                <label class="inline-flex min-h-11 items-center gap-2 text-sm text-zinc-700">
+                    <input type="checkbox" wire:model="isActive" class="size-4 accent-black">
                     Published
                 </label>
-                <label class="inline-flex min-h-11 items-center gap-2 text-sm text-stone-700">
-                    <input type="checkbox" wire:model="isFeatured" class="size-4 accent-sky-700">
+                <label class="inline-flex min-h-11 items-center gap-2 text-sm text-zinc-700">
+                    <input type="checkbox" wire:model="isFeatured" class="size-4 accent-black">
                     Featured
                 </label>
             </fieldset>
         </section>
 
         <section class="card overflow-hidden">
-            <header class="flex flex-wrap items-end justify-between gap-3 border-b border-stone-200 p-5 sm:p-6">
+            <header class="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-200 p-5 sm:p-6">
                 <div>
-                    <h2 class="font-display text-xl font-semibold text-stone-900">SKUs</h2>
-                    <p class="mt-1 text-sm text-stone-600">Each size and color combination needs a unique SKU.</p>
+                    <h2 class="type-heading-md text-black">SKUs</h2>
+                    <p class="mt-1 text-sm text-zinc-600">Each size and color combination needs a unique SKU.</p>
                 </div>
                 <button type="button" wire:click="addVariant" class="btn-outline min-h-11">Add SKU</button>
             </header>
@@ -69,7 +69,7 @@
                 @enderror
 
                 @forelse ($variants as $index => $variant)
-                    <fieldset wire:key="variant-form-{{ $variant['id'] ?? 'new-'.$index }}" class="rounded-lg border border-stone-200 p-4">
+                    <fieldset wire:key="variant-form-{{ $variant['id'] ?? 'new-'.$index }}" class="rounded-lg border border-zinc-200 p-4">
                         <legend class="sr-only">SKU {{ $index + 1 }}</legend>
                         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                             <div>
@@ -100,8 +100,8 @@
                             <div>
                                 @if (isset($variant['id']))
                                     <span class="field-label">Current stock</span>
-                                    <p class="mt-1 flex min-h-11 items-center text-sm font-medium text-stone-900">{{ $variant['stock'] }}</p>
-                                    <p class="text-xs text-stone-600">Adjust stock from the product list.</p>
+                                    <p class="mt-1 flex min-h-11 items-center text-sm font-medium text-zinc-900">{{ $variant['stock'] }}</p>
+                                    <p class="text-xs text-zinc-600">Adjust stock from the product list.</p>
                                 @else
                                     <label for="variant-stock-{{ $index }}" class="field-label">Opening stock</label>
                                     <input id="variant-stock-{{ $index }}" type="number" min="0"
@@ -116,9 +116,9 @@
                         </button>
                     </fieldset>
                 @empty
-                    <div class="rounded-lg border border-dashed border-stone-300 px-5 py-8 text-center">
-                        <p class="font-medium text-stone-900">No SKUs added</p>
-                        <p class="mt-1 text-sm text-stone-600">A published product needs at least one SKU.</p>
+                    <div class="rounded-lg border border-dashed border-zinc-300 px-5 py-8 text-center">
+                        <p class="font-medium text-zinc-900">No SKUs added</p>
+                        <p class="mt-1 text-sm text-zinc-600">A published product needs at least one SKU.</p>
                     </div>
                 @endforelse
             </div>

@@ -4,26 +4,26 @@
     wishlist toggle (FR-21). SEO: per-page title, description, and the
     Product structured data of the nonfunctional requirements.
 --}}
-@section('title', $product->name.' — ClothesTed')
+@section('title', $product->name.' · ClothesTed')
 @section('meta_description', \Illuminate\Support\Str::limit(strip_tags((string) $product->description), 155))
 <script type="application/ld+json" wire:key="product-structured-data"
 >{!! json_encode($this->structuredData(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR) !!}</script>
 <div class="space-y-8">
-    <nav class="text-sm text-stone-500" aria-label="Breadcrumb" wire:key="breadcrumb">
-        <a href="{{ route('home') }}" class="transition-colors hover:text-stone-950 hover:underline">Home</a>
-        <span class="mx-1.5 text-stone-300" aria-hidden="true">/</span>
-        <a href="{{ route('categories.show', $product->category->slug) }}" class="transition-colors hover:text-stone-950 hover:underline">
+    <nav class="text-sm text-zinc-500" aria-label="Breadcrumb" wire:key="breadcrumb">
+        <a href="{{ route('home') }}" class="transition-colors hover:text-black hover:underline">Home</a>
+        <span class="mx-1.5 text-zinc-300" aria-hidden="true">/</span>
+        <a href="{{ route('categories.show', $product->category->slug) }}" class="transition-colors hover:text-black hover:underline">
             {{ $product->category->name }}
         </a>
-        <span class="mx-1.5 text-stone-300" aria-hidden="true">/</span>
-        <span class="text-stone-900">{{ $product->name }}</span>
+        <span class="mx-1.5 text-zinc-300" aria-hidden="true">/</span>
+        <span class="text-black">{{ $product->name }}</span>
     </nav>
 
     <div class="grid gap-10 lg:grid-cols-2 lg:gap-14">
         <section class="space-y-3" wire:key="gallery">
-            <div class="overflow-hidden rounded-xl border border-stone-200 bg-white" wire:key="main-image">
+            <div class="overflow-hidden rounded-xl border border-zinc-200 bg-white" wire:key="main-image">
                 <img src="{{ $this->displayedImage?->url() }}"
-                     alt="{{ $product->name }} — image"
+                     alt="{{ $product->name }} image"
                      class="aspect-[4/5] w-full object-cover">
             </div>
 
@@ -34,8 +34,8 @@
                                 wire:key="image-{{ $image->id }}"
                                 @class(['overflow-hidden rounded-lg border transition-colors',
                                     $this->displayedImage?->id === $image->id
-                                        ? 'border-stone-900'
-                                        : 'border-stone-200 hover:border-stone-400'])
+                                        ? 'border-black'
+                                        : 'border-zinc-200 hover:border-zinc-400'])
                                 aria-label="Show image {{ $image->sort_order + 1 }}"
                                 aria-pressed="{{ $this->displayedImage?->id === $image->id ? 'true' : 'false' }}">
                             <img src="{{ $image->url() }}"
@@ -50,23 +50,23 @@
         <section class="space-y-5">
             <div>
                 <p class="eyebrow">{{ $product->category->name }}</p>
-                <h1 class="mt-1 font-display text-4xl font-semibold tracking-tight text-stone-900" wire:key="product-name">
+                <h1 class="type-display-md mt-1 text-balance" wire:key="product-name">
                     {{ $product->name }}
                 </h1>
-                <p class="mt-3 text-2xl font-semibold tabular-nums text-stone-900">
+                <p class="mt-3 text-2xl font-[550] tabular-nums text-black">
                     Rp {{ number_format($this->finalPrice, 0, ',', '.') }}
                 </p>
             </div>
 
-            <div class="border-t border-stone-200 pt-5">
+            <div class="border-t border-zinc-200 pt-5">
                 <p class="field-label mb-2">Color</p>
                 <div class="flex flex-wrap gap-2" wire:key="color-options">
                     @foreach ($this->colorOptions as $color)
                         <button type="button" wire:click="selectColor('{{ $color }}')"
-                                @class(['rounded-md border px-3 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700',
+                                @class(['rounded-full border px-4 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black',
                                     $this->color === $color
-                                        ? 'border-stone-900 bg-stone-900 text-white'
-                                        : 'border-stone-300 text-stone-700 hover:border-stone-400'])
+                                        ? 'border-black bg-black text-white'
+                                        : 'border-zinc-300 text-zinc-700 hover:border-zinc-500'])
                                 aria-pressed="{{ $this->color === $color ? 'true' : 'false' }}">
                             {{ $color }}
                         </button>
@@ -74,15 +74,15 @@
                 </div>
             </div>
 
-            <div class="border-t border-stone-200 pt-5">
+            <div class="border-t border-zinc-200 pt-5">
                 <p class="field-label mb-2">Size</p>
                 <div class="flex flex-wrap gap-2" wire:key="size-options">
                     @foreach ($this->sizeOptions as $size)
                         <button type="button" wire:click="selectSize('{{ $size }}')"
-                                @class(['rounded-md border px-3 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700',
+                                @class(['rounded-full border px-4 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black',
                                     $this->size === $size
-                                        ? 'border-stone-900 bg-stone-900 text-white'
-                                        : 'border-stone-300 text-stone-700 hover:border-stone-400'])
+                                        ? 'border-black bg-black text-white'
+                                        : 'border-zinc-300 text-zinc-700 hover:border-zinc-500'])
                                 aria-pressed="{{ $this->size === $size ? 'true' : 'false' }}">
                             {{ $size }}
                         </button>
@@ -90,13 +90,13 @@
                 </div>
             </div>
 
-            <div class="border-t border-stone-200 pt-5">
+            <div class="border-t border-zinc-200 pt-5">
                 <div class="flex items-center gap-2 text-sm" wire:key="stock-line">
                     @if ($this->inStock)
-                        <span class="font-semibold text-emerald-700">In stock</span>
-                        <span class="text-stone-500">{{ $this->selectedVariant?->stock }} available</span>
+                        <span class="font-[550] text-emerald-700">In stock</span>
+                        <span class="text-zinc-500">{{ $this->selectedVariant?->stock }} available</span>
                     @else
-                        <span class="font-semibold text-red-600">Out of stock</span>
+                        <span class="font-[550] text-red-600">Out of stock</span>
                     @endif
                 </div>
 
@@ -127,8 +127,8 @@
                 @endif
             </div>
 
-            <div class="border-t border-stone-200 pt-5">
-                <p class="leading-relaxed text-stone-600">{{ $product->description }}</p>
+            <div class="border-t border-zinc-200 pt-5">
+                <p class="leading-relaxed text-zinc-600">{{ $product->description }}</p>
             </div>
         </section>
     </div>

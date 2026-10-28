@@ -12,7 +12,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('Categories | ClothesTed')]
+#[Title('Categories · ClothesTed')]
 class Categories extends Component
 {
     public ?int $editingCategoryId = null;

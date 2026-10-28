@@ -19,7 +19,7 @@ use Livewire\Component;
  * Class 3.4: CheckoutForm (method, address, note, placeOrder).
  */
 #[Layout('layouts.app')]
-#[Title('Checkout — ClothesTed')]
+#[Title('Checkout · ClothesTed')]
 class CheckoutForm extends Component
 {
     public string $shippingMethod = 'pickup';

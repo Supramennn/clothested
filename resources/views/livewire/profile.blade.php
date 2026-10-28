@@ -1,7 +1,7 @@
 <div class="mx-auto w-full max-w-md">
     <header class="mb-6">
-        <h1 class="font-display text-3xl font-semibold tracking-tight text-stone-900">Profile</h1>
-        <p class="mt-2 text-sm text-stone-500">Your email is the login identity and cannot be changed in v1.0.</p>
+        <h1 class="type-display-lg text-black">Profile</h1>
+        <p class="mt-2 text-sm text-zinc-500">Your email is the login identity and cannot be changed in v1.0.</p>
     </header>
 
     <form wire:submit="save" class="card space-y-4 p-6 sm:p-8">
@@ -22,7 +22,7 @@
 
         <div>
             <label for="phone" class="field-label mb-1">
-                Phone <span class="font-normal text-stone-400">(optional)</span>
+                Phone <span class="font-normal text-zinc-500">(optional)</span>
             </label>
             <input id="phone" type="text" wire:model="phone" class="input">
             @error('phone') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
