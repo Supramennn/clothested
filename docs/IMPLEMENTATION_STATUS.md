@@ -18,7 +18,7 @@ Status values: `done` / `partial` / `not started`.
 | 5 | Checkout, OrderService, stock reservation (FR-32..FR-40) | done |
 | 6 | Midtrans payment, webhook, expiry (FR-41..FR-47) | done |
 | 7 | Order lifecycle and admin panel (FR-48..FR-57) | done |
-| 8 | Real-time chat with Reverb (FR-58..FR-64) | not started |
+| 8 | Real-time chat with Reverb (FR-58..FR-64) | done |
 | 9 | Non-functional hardening, full test pass, README | not started |
 
 ## Database Foundation (Phase 1)
@@ -183,6 +183,45 @@ Status values: `done` / `partial` / `not started`.
   `tests/Feature/RoleAccessTest.php` cover catalog rules, stock, order lifecycle,
   payment cancellation, sales reporting, account access, and role boundaries.
 
+## Real-time Chat (Phase 8)
+
+- `app/Services/ChatService.php` owns the chat rules of PRD 5.9: one open
+  session per customer, reused on every visit, with the linked order attached
+  when the chat is opened from an order page (FR-58). Messages are trimmed
+  plain text of at most 2000 characters, the visible history is the last 50
+  lines oldest-first, the unread counters are per sender side, and the header
+  badge counts unread admin lines across all sessions (FR-59, FR-62).
+- Sending is a row-locked transaction: a closed session refuses any further
+  line, and the first admin reply claims `admin_id` on the session so two
+  admins cannot claim at once (FR-61). Only admins may close a session; the
+  closed history stays readable and the customer can start a new conversation
+  (FR-63). Messages are text only — every path validates the 2000-character
+  limit and no upload UI exists (FR-64).
+- `routes/channels.php` guards the `chat.{sessionId}` private channel: the
+  owning customer plus any admin until an admin claims the session, then only
+  that admin. Broadcast pushes use `ShouldBroadcastNow` events
+  (`ChatMessageSent`, `ChatRead`, `ChatSessionClosed`) with `broadcastAs`
+  names `message.received`, `message.read`, and `session.closed`; a failed
+  push is logged and never removes a stored message.
+- `app/Livewire/CustomerChat.php` renders one conversation with the context
+  order link, `app/Livewire/ChatButton.php` shows the header unread badge on
+  every page, and `app/Livewire/Admin/AdminChatPanel.php` lists open sessions
+  with previews and unread badges for the team. The navigation adds the chat
+  entry points (`routes/web.php`: `chat`, `admin.chat`;
+  `resources/views/layouts/app.blade.php`,
+  `resources/views/components/admin-nav.blade.php`), and the order page links
+  "Open the chat" with the order as context.
+- `resources/js/app.js` boots Laravel Echo over Reverb and relays channel
+  events into the Livewire components as browser events
+  (`chat.message.received`, `chat.read.updated`, `chat.session.closed`), so
+  both sides update live without a reload (FR-60, FR-62).
+- Tests: `tests/Feature/ChatTest.php` (13 tests) covers session reuse, order
+  linking, message limits, the 50-line history, admin claiming, read states,
+  the unread badge, closure rules, fresh sessions, and channel authorization.
+  The full suite stands at 123 tests / 538 assertions.
+- Running the chat for real requires `php artisan reverb:start` besides the
+  web server; tests authenticate channels over HTTP and do not need it.
+
 ## Functional Requirements
 
 | FR | Requirement | Module | Status | Files |
@@ -244,13 +283,13 @@ Status values: `done` / `partial` / `not started`.
 | FR-55 | Admin cancel before shipping + manual refund note | AdminOrderManager + payment service | done | `app/Livewire/Admin/AdminOrderManager.php`, `app/Services/OrderService.php`, `app/Services/MidtransPaymentService.php` |
 | FR-56 | Sales report on screen | Reports page | done | `app/Livewire/Admin/SalesReport.php`, `resources/views/livewire/admin/sales-report.blade.php` |
 | FR-57 | Admin accounts, super_admin only | Admin accounts | done | `app/Livewire/Admin/AdminAccounts.php`, `routes/web.php` |
-| FR-58 | One open chat session per customer | ChatService | not started | — |
-| FR-59 | Text-only, 2000 chars, last 50 messages | ChatService | not started | — |
-| FR-60 | Real-time over chat.{sessionId} | CustomerChat | not started | — |
-| FR-61 | Admin panel, first reply claims admin_id | AdminChatPanel | not started | — |
-| FR-62 | ChatRead event, unread counters | Chat events | not started | — |
-| FR-63 | Admin can close session | ChatService | not started | — |
-| FR-64 | No file attachments in v1.0 | Scope decision | not started | — |
+| FR-58 | One open chat session per customer | ChatService | done | `app/Services/ChatService.php`, `app/Livewire/CustomerChat.php` |
+| FR-59 | Text-only, 2000 chars, last 50 messages | ChatService | done | `app/Services/ChatService.php` |
+| FR-60 | Real-time over chat.{sessionId} | CustomerChat | done | `routes/channels.php`, `app/Events/*.php`, `resources/js/app.js` |
+| FR-61 | Admin panel, first reply claims admin_id | AdminChatPanel | done | `app/Livewire/Admin/AdminChatPanel.php`, `resources/views/livewire/admin/admin-chat-panel.blade.php` |
+| FR-62 | ChatRead event, unread counters | Chat events | done | `app/Events/Chat*.php`, `app/Livewire/ChatButton.php` |
+| FR-63 | Admin can close session | ChatService | done | `app/Services/ChatService.php`, `app/Livewire/CustomerChat.php` |
+| FR-64 | No file attachments in v1.0 | Scope decision | done | text-only validation (2000 chars) in `app/Services/ChatService.php` |
 
 ## Acceptance Checklist (PRD section 8)
 
@@ -280,4 +319,4 @@ Status values: `done` / `partial` / `not started`.
 | Customer confirms receipt before a courier or pickup order is completed | done |
 | Dashboard and sales report count non-cancelled settled payments by payment date | done |
 | Admin accounts are available only to super admins | done |
-| Chat messages realtime both sides, one open session | not started |
+| Chat messages realtime both sides, one open session | done |

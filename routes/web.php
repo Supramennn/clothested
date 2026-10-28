@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\LogoutController;
 use App\Livewire\Admin\AdminAccounts;
+use App\Livewire\Admin\AdminChatPanel;
 use App\Livewire\Admin\AdminOrderManager;
 use App\Livewire\Admin\Catalog\Categories;
 use App\Livewire\Admin\Catalog\Products\Form as AdminProductForm;
@@ -13,6 +14,7 @@ use App\Livewire\Auth\Register;
 use App\Livewire\CartManager;
 use App\Livewire\CatalogPage;
 use App\Livewire\CheckoutForm;
+use App\Livewire\CustomerChat;
 use App\Livewire\Orders\Index as OrdersIndex;
 use App\Livewire\Orders\Show as OrdersShow;
 use App\Livewire\ProductDetail;
@@ -33,6 +35,7 @@ Route::middleware('auth')->group(function (): void {
     Route::livewire('/profile', Profile::class)->name('profile');
     Route::livewire('/cart', CartManager::class)->name('cart');
     Route::livewire('/wishlist', Wishlist::class)->name('wishlist');
+    Route::livewire('/chat', CustomerChat::class)->name('chat');
     Route::livewire('/checkout', CheckoutForm::class)->name('checkout');
     Route::livewire('/orders', OrdersIndex::class)->name('orders.index');
     Route::livewire('/orders/{orderCode}', OrdersShow::class)->name('orders.show');
@@ -49,6 +52,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin,super_ad
     Route::livewire('/products/{product}/edit', AdminProductForm::class)->name('products.edit');
     Route::livewire('/orders', AdminOrderManager::class)->name('orders.index');
     Route::livewire('/orders/{orderCode}', AdminOrderManager::class)->name('orders.show');
+    Route::livewire('/chat', AdminChatPanel::class)->name('chat');
     Route::livewire('/reports/sales', SalesReport::class)->name('reports.sales');
 
     Route::livewire('/accounts', AdminAccounts::class)

@@ -153,6 +153,17 @@
                     </button>
                 </section>
             @endif
+
+            <section class="card p-5" wire:key="order-chat">
+                <h2 class="font-display text-lg font-semibold text-stone-900">Help with this order</h2>
+                <p class="mt-2 text-sm leading-relaxed text-stone-600">
+                    Ask the team through the chat; opening it from here links this order as the conversation context.
+                </p>
+                <a href="{{ route('chat', ['order' => $order->order_code]) }}"
+                   class="btn-outline mt-4 min-h-11 px-4">
+                    Open the chat
+                </a>
+            </section>
         </div>
     </div>
 </div>

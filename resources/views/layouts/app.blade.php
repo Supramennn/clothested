@@ -35,6 +35,9 @@
                             </a>
                             <a href="{{ route('wishlist') }}" class="inline-flex min-h-11 items-center rounded-md px-3 text-stone-700 hover:bg-stone-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Wishlist</a>
                             <a href="{{ route('orders.index') }}" class="inline-flex min-h-11 items-center rounded-md px-3 text-stone-700 hover:bg-stone-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Orders</a>
+                            @if (! in_array(auth()->user()?->role, ['admin', 'super_admin'], true))
+                                <a href="{{ route('chat') }}" class="inline-flex min-h-11 items-center rounded-md px-3 text-stone-700 hover:bg-stone-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Chat</a>
+                            @endif
                             <a href="{{ route('profile') }}" class="inline-flex min-h-11 items-center rounded-md px-3 text-stone-700 hover:bg-stone-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Profile</a>
                             @if (in_array(auth()->user()?->role, ['admin', 'super_admin'], true))
                                 <a href="{{ route('admin.dashboard') }}" class="inline-flex min-h-11 items-center rounded-md px-3 text-stone-700 hover:bg-stone-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Admin</a>
@@ -69,6 +72,11 @@
 
                         <a href="{{ route('wishlist') }}" class="btn-ghost">Wishlist</a>
                         <a href="{{ route('orders.index') }}" class="btn-ghost">Orders</a>
+
+                        @if (! in_array(auth()->user()?->role, ['admin', 'super_admin'], true))
+                            @livewire('chat-button')
+                        @endif
+
                         <a href="{{ route('profile') }}" class="btn-ghost">Profile</a>
 
                         @if (in_array(auth()->user()?->role, ['admin', 'super_admin'], true))

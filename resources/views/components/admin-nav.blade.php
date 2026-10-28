@@ -5,6 +5,9 @@
     <a href="{{ route('admin.orders.index') }}" class="inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium text-stone-700 hover:bg-stone-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">
         Orders
     </a>
+    <a href="{{ route('admin.chat') }}" class="inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium text-stone-700 hover:bg-stone-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">
+        Chat
+    </a>
     <a href="{{ route('admin.products.index') }}" class="inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium text-stone-700 hover:bg-stone-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">
         Products
     </a>
