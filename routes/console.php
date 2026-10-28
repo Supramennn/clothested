@@ -9,3 +9,6 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('midtrans:expire-pending')->everyFiveMinutes()->withoutOverlapping();
+
+// Non-functional requirement: daily PostgreSQL dumps kept 14 days by default.
+Schedule::command('db:backup')->dailyAt('01:00')->withoutOverlapping();

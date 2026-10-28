@@ -10,6 +10,7 @@ use App\Models\Wishlist;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -261,6 +262,55 @@ class ProductDetail extends Component
             ->where('user_id', $user->id)
             ->where('product_id', $this->product()->id)
             ->exists();
+    }
+
+    /**
+     * SEO non-functional requirement: one Product structured-data document
+     * with a priced offer per SKU. Prices are IDR integers, per the store.
+     *
+     * @return array<string, mixed>
+     */
+    public function structuredData(): array
+    {
+        $product = $this->product();
+        $variants = $product->variants;
+
+        $offers = $variants
+            ->map(fn (ProductVariant $variant): array => [
+                '@type' => 'Offer',
+                'sku' => $variant->sku,
+                'price' => (float) $variant->finalPrice(),
+                'priceCurrency' => 'IDR',
+                'availability' => $variant->stock > 0
+                    ? 'https://schema.org/InStock'
+                    : 'https://schema.org/OutOfStock',
+            ]);
+
+        if ($offers->isEmpty()) {
+            $offers[] = [
+                '@type' => 'Offer',
+                'price' => (float) $product->base_price,
+                'priceCurrency' => 'IDR',
+            ];
+        }
+
+        return [
+            '@context' => 'https://schema.org',
+            '@type' => 'Product',
+            'name' => $product->name,
+            'description' => Str::limit(strip_tags((string) $product->description), 300),
+            'url' => route('products.show', $product->slug),
+            'image' => $product->images->map(fn (ProductImage $image): string => $image->url())->values()->all(),
+            'brand' => ['@type' => 'Brand', 'name' => 'ClothesTed'],
+            'offers' => [
+                '@type' => 'AggregateOffer',
+                'lowPrice' => $offers->min('price'),
+                'highPrice' => $offers->max('price'),
+                'priceCurrency' => 'IDR',
+                'offerCount' => $offers->count(),
+                'offers' => $offers->all(),
+            ],
+        ];
     }
 
     public function render(): View

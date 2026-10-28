@@ -9,6 +9,7 @@ use App\Models\ShippingAddress;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -123,6 +124,8 @@ class OrderService
         });
 
         $order->refresh();
+
+        $this->logTransition($order, 'cancelled', $refundNote);
     }
 
     public function markReadyForPickup(Order $order): void
@@ -138,6 +141,8 @@ class OrderService
 
             $locked->update(['status' => 'ready_for_pickup']);
         });
+
+        $this->logTransition($order, 'ready_for_pickup');
     }
 
     public function markShipped(Order $order, string $waybillNumber): void
@@ -173,6 +178,8 @@ class OrderService
             $address->update(['waybill_number' => trim($waybillNumber)]);
             $locked->update(['status' => 'shipped']);
         });
+
+        $this->logTransition($order, 'shipped');
     }
 
     public function confirmReceipt(Order $order, User $customer): void
@@ -194,6 +201,8 @@ class OrderService
 
             $locked->update(['status' => 'completed']);
         });
+
+        $this->logTransition($order, 'completed');
     }
 
     public function adminCancel(Order $order, string $refundNote): void
@@ -227,6 +236,22 @@ class OrderService
                 'refund_note' => $refundNote,
             ]);
         });
+
+        $this->logTransition($order, 'cancelled', $refundNote);
+    }
+
+    /**
+     * Non-functional requirement: admin status changes leave one structured
+     * log line each, so the store can audit who moved which order when.
+     */
+    private function logTransition(Order $order, string $action, ?string $refundNote = null): void
+    {
+        Log::info('An order status was updated.', [
+            'order_code' => $order->refresh()->order_code,
+            'action' => $action,
+            'status' => $order->status,
+            'refund_note' => $refundNote,
+        ]);
     }
 
     private function releaseReservedStock(Order $order): void

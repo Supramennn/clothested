@@ -1,58 +1,122 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ClothesTed
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+ClothesTed is a small fashion e-commerce store built for version 1.0 per the
+ClothesTed PRD: a storefront catalog with live filters, a cart and checkout
+powered by Midtrans Snap, order and stock handling with a strict lifecycle,
+an admin area for catalog, orders, reports, and accounts, plus real-time
+customer–admin chat.
 
-## About Laravel
+## Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Laravel 13** (PHP 8.4) with **Livewire 4** for interactive pages
+- **Tailwind CSS v4** compiled with **Vite**
+- **PostgreSQL** as the production database (SQLite in tests)
+- **Laravel Reverb** for the real-time chat WebSocket
+- **Midtrans Snap** for payments
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Requirements
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.4 with the `pdo_pgsql` extension
+- Composer
+- Node.js (for Vite)
+- PostgreSQL 15+
+- A Midtrans sandbox account (for checkout)
 
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Setup
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+cp .env.example .env
+php artisan key:generate
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Fill the `.env` values that matter:
 
-## Contributing
+- `DB_*` — PostgreSQL connection details, then:
+  ```bash
+  php artisan migrate --seed
+  php artisan storage:link
+  ```
+- `MIDTRANS_*` — the **server key never leaves the server**; only the client
+  key is exposed to the browser through the Snap popup. Keep
+  `MIDTRANS_IS_PRODUCTION=false` while testing with sandbox keys.
+- `REVERB_APP_*` — the app id/key/secret that `reverb:start` serves; the
+  frontend reads them through the mirrored `VITE_REVERB_*` variables.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+The `composer.json` also exposes a one-shot `composer setup` script that runs
+install + migration + asset build.
 
-## Code of Conduct
+### Demo accounts
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+`php artisan db:seed` creates:
 
-## Security Vulnerabilities
+| Role        | Email                      | Password       |
+|-------------|----------------------------|----------------|
+| Super admin | `superadmin@clothested.test` | `superadmin123` |
+| Admin       | `admin@clothested.test`      | `admin123`      |
+| Customer    | `customer@clothested.test`   | `customer123`   |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Running
 
-## License
+```bash
+php artisan serve            # the web app on http://127.0.0.1:8000
+php artisan reverb:start     # the WebSocket server used by the chat
+php artisan schedule:work    # payment expiry checks + daily 01:00 DB backup
+npm run dev                  # Vite dev server (or `npm run build` for prod)
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+During development, `composer dev` bundles serve + queue/log-dev commands.
+
+## Tests
+
+The suite runs on SQLite in memory:
+
+```bash
+php artisan test
+```
+
+## Scheduled jobs
+
+- `midtrans:expire-pending` every 5 minutes: expires stale Midtrans
+  transactions and releases their reserved stock.
+- `db:backup` daily at 01:00: dumps the database through `pg_dump` into
+  `storage/app/private/backups` (keeps files for 14 days; pass
+  `--keep-days=` to change).
+
+## Backup and recovery
+
+Make a manual dump at any time:
+
+```bash
+php artisan db:backup
+```
+
+To restore on a fresh database (tested procedure):
+
+```bash
+createdb -h 127.0.0.1 -U clothested clothested_restored
+pg_restore -h 127.0.0.1 -U clothested -d clothested_restored storage/app/private/backups/backup-YYYYMMDD_HHMMSS.dump
+```
+
+Then point `DB_DATABASE` at the restored name, or rename the databases. Drop
+scratch databases after verification.
+
+## Operating notes
+
+- HTTPS is forced in production: generated URLs always use the secure scheme.
+- Registration is rate-limited to 5 attempts per 10 minutes per IP, and login
+  to 5 failures per minute per account.
+- Order status transitions (cancel, ready for pickup, ship, receipt confirm)
+  each leave one structured log line; Midtrans webhook processing logs its
+  results too. Daily log files are kept for 30 days (`LOG_DAILY_DAYS=30`).
+- Product detail pages expose per-page titles, meta descriptions, and
+  Product JSON-LD structured data; catalog and category pages set their own
+  title and description.
+- Account deletion is manual and only performed by the super admin from
+  **Admin → Accounts**; deleted accounts are removed along with their carts
+  and wishlists while their orders stay for bookkeeping.
+
+## Status
+
+The phase-by-phase implementation progress lives in
+[`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md).

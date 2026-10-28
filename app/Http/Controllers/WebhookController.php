@@ -16,6 +16,13 @@ class WebhookController
     {
         try {
             $payments->processNotification($request->json()->all());
+
+            // Observability requirement: every accepted webhook notification
+            // leaves one structured line for later audits.
+            Log::info('A Midtrans notification was processed.', [
+                'order_id' => $request->input('order_id'),
+                'transaction_status' => $request->input('transaction_status'),
+            ]);
         } catch (MidtransException $exception) {
             Log::error('Midtrans notification processing failed.', [
                 'order_id' => $request->input('order_id'),

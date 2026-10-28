@@ -19,7 +19,7 @@ Status values: `done` / `partial` / `not started`.
 | 6 | Midtrans payment, webhook, expiry (FR-41..FR-47) | done |
 | 7 | Order lifecycle and admin panel (FR-48..FR-57) | done |
 | 8 | Real-time chat with Reverb (FR-58..FR-64) | done |
-| 9 | Non-functional hardening, full test pass, README | not started |
+| 9 | Non-functional hardening, full test pass, README | done |
 
 ## Database Foundation (Phase 1)
 
@@ -222,6 +222,62 @@ Status values: `done` / `partial` / `not started`.
 - Running the chat for real requires `php artisan reverb:start` besides the
   web server; tests authenticate channels over HTTP and do not need it.
 
+## Non-Functional Hardening (Phase 9)
+
+Audited PRD section 6 requirement by requirement and closed every gap the
+application itself owns:
+
+- Security: `Register` now rate-limits sign-ups too — 5 attempts per 600 s
+  keyed by caller IP (`app/Livewire/Auth/Register.php`), thrown before
+  validation, with no clear on success so mass account creation stays capped;
+  the blocked attempt reports under `email` as "Too many registration
+  attempts. Try again in {N} seconds." Login already had its limiter (FR-03).
+  HTTPS is enforced only in production
+  (`app/Providers/AppServiceProvider.php`: `URL::forceScheme('https')`), so
+  local development stays plain HTTP while deployed URLs always upgrade.
+- SEO: `resources/views/layouts/app.blade.php` yields `meta_description`;
+  Livewire shows that component-view `@section` values propagate into the
+  layout's `@yield`, so `product-detail.blade.php` sets the per-product title
+  and description and `catalog-page.blade.php` does it for home and category
+  pages (`CatalogPage::activeCategoryName()`); `ProductDetail::structuredData()`
+  emits schema.org Product JSON-LD with an AggregateOffer of per-SKU offers
+  (SKU, IDR price, InStock/OutOfStock), rendered with the JSON_HEX_* flags so
+  content cannot break out of the script tag. All other pages already carried
+  `#[Title]` attributes.
+- Observability: every lifecycle change in `OrderService`
+  (cancel, adminCancel, ready for pickup, ship, receipt confirm) now leaves
+  one structured `Log::info('An order status was updated.')` line with
+  order code, action, status, and refund note; the webhook logs an info line
+  per accepted notification (`app/Http/Controllers/WebhookController.php`).
+  Log files switched from single to daily with 30-day retention
+  (`.env`/`.env.example`: `LOG_STACK=daily`, `LOG_DAILY_DAYS=30`).
+- Availability and backup: new `db:backup` command
+  (`app/Console/Commands/BackupDatabase.php`) runs `pg_dump -Fc` through
+  the Process facade, writes `storage/app/private/backups/backup-*.dump`
+  (the `local` disk root is `storage/app/private`), prunes dumps older than
+  `--keep-days=14`, and logs success/failure; scheduled daily at 01:00
+  with `withoutOverlapping` (`routes/console.php`). The recovery procedure
+  was executed for real: dump the local database, `createdb` a scratch
+  database, `pg_restore` into it, verify (20 tables, the 3 seeded accounts,
+  8 products), then drop the scratch database. Documented in the README.
+- Payment safety, privacy, compatibility, and accessibility were verified in
+  place from the earlier phases: the server key is read server-side only, the
+  webhook always verifies the signature and logs hold no card data, checkout
+  stores courier addresses only, account deletion is manual per super admin,
+  and the restyled views carry AA contrast, focus styles, labels, and
+  keyboard-operable navigation. Performance (LCP ≤ 2.5 s p75, filters
+  < 200 ms p50) is a documented production target: the catalog pages run
+  a bounded query set with 24-per-page pagination, and v1.0 ships no
+  runtime profiler.
+- Tests: `tests/Feature/HardeningTest.php` (4 tests) covers the sign-up cap,
+  the product-page title/description/JSON-LD, the catalog title/description,
+  and the structured transition log. The full suite stands at 127 tests /
+  556 assertions.
+- `README.md` was rewritten from skeleton boilerplate into a project readme:
+  stack, setup, demo accounts, running processes (`reverb:start`,
+  `schedule:work`), scheduled jobs, backup + tested recovery, operating
+  notes, and the tracker pointer.
+
 ## Functional Requirements
 
 | FR | Requirement | Module | Status | Files |
@@ -320,3 +376,17 @@ Status values: `done` / `partial` / `not started`.
 | Dashboard and sales report count non-cancelled settled payments by payment date | done |
 | Admin accounts are available only to super admins | done |
 | Chat messages realtime both sides, one open session | done |
+
+## Non-Functional Requirements (PRD section 6)
+
+| Area | Requirement | Status | Where |
+|---|---|---|---|
+| Performance | Catalog LCP at most 2.5 s at p75; search and filter responses below 200 ms at p50 | documented target | `app/Livewire/CatalogPage.php` (bounded query set, 24/page, URL state filters); no runtime profiler ships in v1.0 |
+| Security | bcrypt hashing; mandatory HTTPS; CSRF protection; rate limit on login and registration; role middleware for admin | done | password hashing (bcrypt), `app/Providers/AppServiceProvider.php` (forceScheme https in production), `web` CSRF protection, `RateLimiter` in `app/Livewire/Auth/{Login,Register}.php`, `role` middleware (`EnsureRole.php`) |
+| Payment safety | Server key never in the browser; webhook verifies signature; logs hold no card data | done | `app/Services/MidtransPaymentService.php` (server-side keys, signature re-verification), log calls store IDs and statuses only |
+| Compatibility | Current Chrome/Edge/Firefox/Safari; intact from 360 to 1920 px; sharp images on retina | done | responsive Tailwind shell across phases (buttonless mobile menu, stacked layouts); placeholder images served numerically sized |
+| Accessibility | At least AA contrast; visible focus; explicit labels; keyboard navigation | done | restyled views: stone palette contrast, `focus` rings, `<label for>` forms, aria-labels and operable menus |
+| SEO | Slug URLs; titles and meta per page; Product structured data on detail pages | done | `routes/web.php`, `#[Title]`/`@section('title')`, `@yield('meta_description')`, `ProductDetail::structuredData()` JSON-LD |
+| Observability | Structured logs for webhook, admin status changes, failures; 30-day retention | done | `OrderService::logTransition()` on 5 lifecycle methods, `WebhookController` info log, `MidtransPaymentService` failure logs, `LOG_STACK=daily` + `LOG_DAILY_DAYS=30` |
+| Availability and backup | 99% monthly target; daily PostgreSQL dumps kept 14 days; tested recovery procedure | done (app side) | `php artisan db:backup` + daily 01:00 schedule (`routes/console.php`), 14-day prune, restore verified against a scratch database; uptime target is an operations concern |
+| Privacy | Minimum data; addresses only for courier orders; manual account deletion by super admin | done | `OrderService`/`ShippingAddress` only for courier checkout, `app/Livewire/Admin/AdminAccounts.php` deletion, no marketing data collected |

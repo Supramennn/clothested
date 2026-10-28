@@ -70,6 +70,20 @@ class CatalogPage extends Component
     }
 
     /**
+     * SEO non-functional requirement: the category name title part on a
+     * category page and "Catalog" on the store home.
+     */
+    #[Computed]
+    public function activeCategoryName(): string
+    {
+        if ($this->category === '') {
+            return 'Catalog';
+        }
+
+        return $this->categories()->firstWhere('slug', $this->category)?->name ?? 'Catalog';
+    }
+
+    /**
      * FR-10/FR-09: only active products, first image per card, filters AND-ed.
      */
     #[Computed]

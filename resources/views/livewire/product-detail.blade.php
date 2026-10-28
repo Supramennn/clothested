@@ -1,8 +1,13 @@
 {{--
     Product detail page: breadcrumb (FR-17), gallery in sort_order,
     side-by-side picker (FR-18), live final price (FR-19), cart (FR-20),
-    wishlist toggle (FR-21).
+    wishlist toggle (FR-21). SEO: per-page title, description, and the
+    Product structured data of the nonfunctional requirements.
 --}}
+@section('title', $product->name.' — ClothesTed')
+@section('meta_description', \Illuminate\Support\Str::limit(strip_tags((string) $product->description), 155))
+<script type="application/ld+json" wire:key="product-structured-data"
+>{!! json_encode($this->structuredData(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR) !!}</script>
 <div class="space-y-8">
     <nav class="text-sm text-stone-500" aria-label="Breadcrumb" wire:key="breadcrumb">
         <a href="{{ route('home') }}" class="transition-colors hover:text-stone-950 hover:underline">Home</a>

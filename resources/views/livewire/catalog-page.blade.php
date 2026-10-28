@@ -1,3 +1,7 @@
+@section('title', $this->activeCategoryName().' — ClothesTed')
+@section('meta_description', $this->activeCategoryName() === 'Catalog'
+    ? 'New arrivals and wardrobe staples, filter by size, color, and price without leaving the page.'
+    : 'Shop the '.$this->activeCategoryName().' collection with live filters by size, color, and price.')
 <div class="space-y-8">
     <header class="max-w-2xl">
         <h1 class="font-display text-3xl font-semibold tracking-tight text-stone-900">Catalog</h1>
