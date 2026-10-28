@@ -100,14 +100,14 @@ class MidtransPaymentService
     /**
      * Reconfirm a payment from Midtrans, then apply its authoritative state.
      */
-    public function refreshPayment(Payment $payment): Payment
+    public function refreshPayment(Payment $payment, ?string $adminRefundNote = null): Payment
     {
         $this->assertConfigured();
 
         $confirmed = $this->fetchStatus($payment->midtrans_order_id);
         $this->assertStatusMatchesPayment($payment, $confirmed);
 
-        return $this->applyStatus($payment, $confirmed);
+        return $this->applyStatus($payment, $confirmed, adminRefundNote: $adminRefundNote);
     }
 
     /**
@@ -181,9 +181,19 @@ class MidtransPaymentService
     /**
      * Cancel an open Midtrans transaction before releasing its reserved stock.
      */
-    public function cancelPendingOrder(Order $order): void
+    public function cancelPendingOrder(Order $order, ?string $adminRefundNote = null): void
     {
-        $cancelled = DB::transaction(function () use ($order): bool {
+        if ($adminRefundNote !== null) {
+            $adminRefundNote = trim($adminRefundNote);
+
+            if ($adminRefundNote === '' || mb_strlen($adminRefundNote) > 1000) {
+                throw ValidationException::withMessages([
+                    'refundNote' => 'Enter a cancellation or refund note up to 1,000 characters.',
+                ]);
+            }
+        }
+
+        $cancelled = DB::transaction(function () use ($order, $adminRefundNote): bool {
             $lockedOrder = Order::query()->lockForUpdate()->findOrFail($order->id);
 
             if (! $lockedOrder->isCancellable()) {
@@ -196,7 +206,11 @@ class MidtransPaymentService
                 ->first();
 
             if ($payment === null) {
-                $this->orders->cancel($lockedOrder);
+                if ($adminRefundNote === null) {
+                    $this->orders->cancel($lockedOrder);
+                } else {
+                    $this->orders->adminCancel($lockedOrder, $adminRefundNote);
+                }
 
                 return true;
             }
@@ -204,9 +218,16 @@ class MidtransPaymentService
             $this->assertConfigured();
 
             if ($payment->transaction_status !== 'pending') {
-                $this->refreshPayment($payment);
+                $payment = $this->refreshPayment($payment, $adminRefundNote);
+                $currentOrder = Order::query()->findOrFail($lockedOrder->id);
 
-                return Order::query()->findOrFail($lockedOrder->id)->status === 'cancelled';
+                if ($adminRefundNote !== null && $payment->transaction_status === 'settlement' && $currentOrder->status !== 'cancelled') {
+                    $this->orders->adminCancel($currentOrder, $adminRefundNote);
+
+                    return true;
+                }
+
+                return $currentOrder->refresh()->status === 'cancelled';
             }
 
             try {
@@ -226,9 +247,16 @@ class MidtransPaymentService
                 $this->responseBody($response, 'transaction cancellation', $payment->midtrans_order_id);
             }
 
-            $this->refreshPayment($payment);
+            $payment = $this->refreshPayment($payment, $adminRefundNote);
+            $currentOrder = Order::query()->findOrFail($lockedOrder->id);
 
-            return Order::query()->findOrFail($lockedOrder->id)->status === 'cancelled';
+            if ($adminRefundNote !== null && $payment->transaction_status === 'settlement' && $currentOrder->status !== 'cancelled') {
+                $this->orders->adminCancel($currentOrder, $adminRefundNote);
+
+                return true;
+            }
+
+            return $currentOrder->refresh()->status === 'cancelled';
         });
 
         if (! $cancelled) {
@@ -310,8 +338,12 @@ class MidtransPaymentService
      * @param  array<string, mixed>  $confirmed
      * @param  array<string, mixed>|null  $notification
      */
-    private function applyStatus(Payment $payment, array $confirmed, ?array $notification = null): Payment
-    {
+    private function applyStatus(
+        Payment $payment,
+        array $confirmed,
+        ?array $notification = null,
+        ?string $adminRefundNote = null,
+    ): Payment {
         $rawStatus = strtolower((string) ($confirmed['transaction_status'] ?? ''));
         $status = match ($rawStatus) {
             'settlement', 'capture' => 'settlement',
@@ -335,7 +367,7 @@ class MidtransPaymentService
             $status = 'pending';
         }
 
-        return DB::transaction(function () use ($payment, $confirmed, $notification, $status): Payment {
+        return DB::transaction(function () use ($payment, $confirmed, $notification, $status, $adminRefundNote): Payment {
             $order = Order::query()->lockForUpdate()->findOrFail($payment->order_id);
             $lockedPayment = Payment::query()->lockForUpdate()->findOrFail($payment->id);
             $changes = [
@@ -377,7 +409,7 @@ class MidtransPaymentService
                     ]);
                 }
             } elseif (in_array($status, ['expire', 'cancel', 'deny'], true) && $order->status === 'pending') {
-                $this->orders->cancel($order);
+                $this->orders->cancel($order, $adminRefundNote);
             }
 
             return $lockedPayment->refresh();

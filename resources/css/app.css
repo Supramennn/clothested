@@ -32,8 +32,8 @@
 
     /* Outlined secondary action for the supporting command in a group. */
     .btn-outline {
-        @apply inline-flex items-center justify-center gap-2 rounded-md border border-stone-300 bg-white px-5 py-2.5 text-sm
-            font-semibold text-stone-700 transition-colors hover:border-stone-400 hover:text-stone-950
+        @apply inline-flex items-center justify-center gap-2 rounded-md border border-stone-500 bg-white px-5 py-2.5 text-sm
+            font-semibold text-stone-700 transition-colors hover:border-stone-600 hover:text-stone-950
             focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700
             disabled:pointer-events-none disabled:border-stone-200 disabled:text-stone-400;
     }
@@ -50,7 +50,7 @@
 
     /* Form fields share one silhouette everywhere. */
     .input {
-        @apply w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900
+        @apply w-full rounded-md border border-stone-500 bg-white px-3 py-2 text-sm text-stone-900
             placeholder:text-stone-400 focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600
             disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-500;
     }

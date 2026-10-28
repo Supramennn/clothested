@@ -79,6 +79,11 @@
                         <span class="block">{{ $order->shippingAddress->address_line }}</span>
                         <span class="block">{{ $order->shippingAddress->city }} {{ $order->shippingAddress->postal_code }}</span>
                     </address>
+                    @if ($order->shippingAddress->waybill_number)
+                        <p class="mt-3 text-sm text-stone-600">
+                            Waybill: <span class="font-medium text-stone-900">{{ $order->shippingAddress->waybill_number }}</span>
+                        </p>
+                    @endif
                 @endif
 
                 @if ($order->note)
@@ -117,6 +122,20 @@
                     </p>
                     <button type="button" wire:click="startPayment" class="btn-primary mt-4">
                         Continue to Midtrans Snap
+                    </button>
+                </section>
+            @endif
+
+            @if ($order->status === 'shipped' || $order->status === 'ready_for_pickup')
+                <section class="card p-5" wire:key="order-receipt">
+                    <h2 class="font-display text-lg font-semibold text-stone-900">Confirm receipt</h2>
+                    <p class="mt-2 text-sm leading-relaxed text-stone-600">
+                        {{ $order->shipping_method === 'pickup'
+                            ? 'Confirm after you collect the order from the store.'
+                            : 'Confirm after the courier delivers the order.' }}
+                    </p>
+                    <button type="button" wire:click="confirmReceipt" class="btn-primary mt-4 min-h-11">
+                        Confirm receipt
                     </button>
                 </section>
             @endif

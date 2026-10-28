@@ -16,11 +16,37 @@ test('customers opening admin links go home with an access denied message (FR-07
 });
 
 test('admins and super admins pass the role middleware (FR-07)', function () {
-    $this->actingAs(User::factory()->admin()->create())
-        ->get('/admin')
-        ->assertOk();
+    $admin = User::factory()->admin()->create();
+
+    foreach ([
+        'admin.dashboard',
+        'admin.categories',
+        'admin.products.index',
+        'admin.products.create',
+        'admin.orders.index',
+        'admin.reports.sales',
+    ] as $routeName) {
+        $this->actingAs($admin)->get(route($routeName))->assertOk();
+    }
 
     $this->actingAs(User::factory()->superAdmin()->create())
         ->get('/admin')
         ->assertOk();
+});
+
+test('customers cannot access admin operations pages', function () {
+    $customer = User::factory()->customer()->create();
+
+    foreach ([
+        'admin.categories',
+        'admin.products.index',
+        'admin.products.create',
+        'admin.orders.index',
+        'admin.reports.sales',
+        'admin.accounts',
+    ] as $routeName) {
+        $this->actingAs($customer)
+            ->get(route($routeName))
+            ->assertRedirect(route('home'));
+    }
 });

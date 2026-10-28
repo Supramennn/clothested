@@ -1,7 +1,13 @@
 <?php
 
 use App\Http\Controllers\LogoutController;
+use App\Livewire\Admin\AdminAccounts;
+use App\Livewire\Admin\AdminOrderManager;
+use App\Livewire\Admin\Catalog\Categories;
+use App\Livewire\Admin\Catalog\Products\Form as AdminProductForm;
+use App\Livewire\Admin\Catalog\Products\Index as AdminProducts;
 use App\Livewire\Admin\Dashboard;
+use App\Livewire\Admin\SalesReport;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\CartManager;
@@ -37,4 +43,15 @@ Route::middleware('auth')->group(function (): void {
 // Admin area; role middleware rejects every other account (FR-07).
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin,super_admin'])->group(function (): void {
     Route::livewire('/', Dashboard::class)->name('dashboard');
+    Route::livewire('/categories', Categories::class)->name('categories');
+    Route::livewire('/products', AdminProducts::class)->name('products.index');
+    Route::livewire('/products/create', AdminProductForm::class)->name('products.create');
+    Route::livewire('/products/{product}/edit', AdminProductForm::class)->name('products.edit');
+    Route::livewire('/orders', AdminOrderManager::class)->name('orders.index');
+    Route::livewire('/orders/{orderCode}', AdminOrderManager::class)->name('orders.show');
+    Route::livewire('/reports/sales', SalesReport::class)->name('reports.sales');
+
+    Route::livewire('/accounts', AdminAccounts::class)
+        ->middleware('role:super_admin')
+        ->name('accounts');
 });

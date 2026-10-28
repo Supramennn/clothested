@@ -4,8 +4,10 @@ namespace App\Livewire\Orders;
 
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\User;
 use App\Services\MidtransException;
 use App\Services\MidtransPaymentService;
+use App\Services\OrderService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -120,6 +122,26 @@ class Show extends Component
 
         unset($this->order);
         $this->notice = 'Payment status: '.str_replace('_', ' ', ucfirst($payment->transaction_status)).'.';
+    }
+
+    public function confirmReceipt(OrderService $orders): void
+    {
+        $customer = Auth::user();
+
+        if (! $customer instanceof User) {
+            abort(403);
+        }
+
+        try {
+            $orders->confirmReceipt($this->order, $customer);
+        } catch (ValidationException $exception) {
+            $this->notice = $exception->errors()['order'][0] ?? 'This order is not ready for receipt confirmation.';
+
+            return;
+        }
+
+        unset($this->order);
+        $this->notice = 'Receipt confirmed. This order is complete.';
     }
 
     public function render(): View

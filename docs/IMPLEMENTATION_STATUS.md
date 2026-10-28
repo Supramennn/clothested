@@ -16,8 +16,8 @@ Status values: `done` / `partial` / `not started`.
 | 3 | Storefront catalog and product detail (FR-09..FR-24) | done |
 | 4 | Cart and wishlist (FR-25..FR-31) | done |
 | 5 | Checkout, OrderService, stock reservation (FR-32..FR-40) | done |
-| 6 | Midtrans payment, webhook, expiry (FR-41..FR-47) | partial (admin payment-failure detail continues in Phase 7) |
-| 7 | Order lifecycle and admin panel (FR-48..FR-57) | not started |
+| 6 | Midtrans payment, webhook, expiry (FR-41..FR-47) | done |
+| 7 | Order lifecycle and admin panel (FR-48..FR-57) | done |
 | 8 | Real-time chat with Reverb (FR-58..FR-64) | not started |
 | 9 | Non-functional hardening, full test pass, README | not started |
 
@@ -45,7 +45,7 @@ Status values: `done` / `partial` / `not started`.
 
 - Livewire class components: `app/Livewire/Auth/{Register,Login}.php` (validation rules in the
   component, rate limit on repeated failures in `Login`), `app/Livewire/Profile.php`,
-  `app/Livewire/Admin/Dashboard.php` (placeholder until Phase 7), shared shell
+  `app/Livewire/Admin/Dashboard.php`, shared shell
   `resources/views/layouts/app.blade.php` with the `App\View\Components\AppLayout` class for
   plain Blade pages (Vendor welcome replaced by `resources/views/home.blade.php`).
 - Routes (`routes/web.php`): `/register` + `/login` under `guest`, `/profile` + `POST /logout`
@@ -147,8 +147,41 @@ Status values: `done` / `partial` / `not started`.
   variables; no SDK or database schema changes were added.
 - Tests: `tests/Feature/MidtransPaymentTest.php` covers Snap redirect and payload,
   signature rejection, idempotent settlement, failure/cancellation, status checks,
-  and expiry. The admin order detail surface for logged payment failures is part
-  of Phase 7, so FR-47 remains partial until that surface exists.
+  and expiry. Admin order details expose stored failure context and pending orders
+  without a recorded payment session (FR-47).
+
+## Order Lifecycle and Admin Panel (Phase 7)
+
+- `app/Livewire/Admin/Dashboard.php` shows settled payments for the current day,
+  open-order counts, and the oldest orders awaiting action.
+- `app/Livewire/Admin/Catalog/{Categories,Products/Form,Products/Index}.php`
+  manages category and product data, unique category slugs and SKUs, publication
+  with at least one SKU, and non-negative stock adjustments. Products and SKUs
+  referenced by carts or order history cannot be deleted.
+- `app/Livewire/Admin/AdminOrderManager.php` lists and filters orders, shows
+  customer, item, address, payment, and cancellation details, and enforces the
+  order transitions. Courier orders need a waybill before shipping; pickup orders
+  become ready for collection; customers confirm receipt before either delivery
+  path completes.
+- `app/Services/OrderService.php` locks order and inventory rows during lifecycle
+  changes, returns reserved stock once on cancellation, and stores the required
+  admin note. Admin cancellation stops before shipping; pending Midtrans payments
+  are cancelled and reconfirmed before stock is released. The admin screen does
+  not claim to issue a provider refund.
+- The additive migration
+  `database/migrations/2026_10_27_000001_add_admin_operations_fields_to_orders_and_shipping_addresses.php`
+  stores `orders.refund_note` and `shipping_addresses.waybill_number`, as approved.
+- `app/Livewire/Admin/SalesReport.php` reports settled, non-cancelled order totals
+  by payment settlement date over a validated date range.
+- `app/Livewire/Admin/AdminAccounts.php` and the `admin.accounts` super-admin-only
+  route manage admin accounts without exposing super-admin role changes.
+- The admin navigation is shared in `resources/views/components/admin-nav.blade.php`;
+  the application header uses a keyboard-operable compact menu on narrow screens.
+- Tests: `tests/Feature/AdminCatalogTest.php`,
+  `tests/Feature/AdminOrdersTest.php`,
+  `tests/Feature/AdminReportsAccountsTest.php`, and
+  `tests/Feature/RoleAccessTest.php` cover catalog rules, stock, order lifecycle,
+  payment cancellation, sales reporting, account access, and role boundaries.
 
 ## Functional Requirements
 
@@ -169,7 +202,7 @@ Status values: `done` / `partial` / `not started`.
 | FR-13 | Sorting newest/price | CatalogPage | done | `app/Livewire/CatalogPage.php` |
 | FR-14 | Livewire updates without full reload, URL state | CatalogPage | done | `app/Livewire/CatalogPage.php` (`#[Url]` + `WithPagination`) |
 | FR-15 | Pagination 24 per page | CatalogPage | done | `app/Livewire/CatalogPage.php` |
-| FR-16 | Category management, unique slugs | CatalogPage + admin CRUD | partial | `app/Livewire/CatalogPage.php`; admin category CRUD arrives in Phase 7 |
+| FR-16 | Category management, unique slugs | Admin catalog | done | `app/Livewire/Admin/Catalog/Categories.php` |
 | FR-17 | Product page with slug and gallery order | ProductDetail | done | `app/Livewire/ProductDetail.php`, `app/Models/ProductImage.php` |
 | FR-18 | Variant picker maps to SKU price/stock | ProductDetail | done | `app/Livewire/ProductDetail.php` |
 | FR-19 | Final price updates live | ProductDetail | done | `app/Models/ProductVariant.php` (`finalPrice()`), `app/Livewire/ProductDetail.php` |
@@ -177,7 +210,7 @@ Status values: `done` / `partial` / `not started`.
 | FR-21 | Wishlist toggle at product level | ProductDetail | done | `app/Livewire/ProductDetail.php` (`toggleWishlist`), page `app/Livewire/Wishlist.php` |
 | FR-22 | Inactive product page 404 | ProductDetail | done | `app/Livewire/ProductDetail.php` |
 | FR-23 | Price snapshot at checkout | OrderService (FR-37) | done | `app/Services/OrderService.php` |
-| FR-24 | Publish only with at least one variant | Product scope | done | `app/Models/Product.php` (`active()` scope requires variants); admin publish form follows in Phase 7 |
+| FR-24 | Publish only with at least one variant | Product scope + admin form | done | `app/Models/Product.php`, `app/Livewire/Admin/Catalog/Products/Form.php` |
 | FR-25 | Login-required add to cart with return URL | CartManager | done | `app/Livewire/ProductDetail.php` + `app/Livewire/Auth/Login.php` (`url.intended`) |
 | FR-26 | Same SKU merges into one row | CartManager | done | `app/Models/CartItem.php` (`mergeAdd`) |
 | FR-27 | Quantity clipped to 1..30 and stock | CartManager | done | `app/Livewire/CartManager.php` (`setQty`) |
@@ -200,17 +233,17 @@ Status values: `done` / `partial` / `not started`.
 | FR-44 | Webhook verifies SHA-512, idempotent, always HTTP 200 | WebhookController | done | `app/Http/Controllers/WebhookController.php`, `app/Services/MidtransPaymentService.php`, `routes/api.php` |
 | FR-45 | Settlement/capture → processing, filled paid_at | MidtransPaymentService | done | `app/Services/MidtransPaymentService.php` |
 | FR-46 | Expire/cancel/deny → cancelled + stock release | MidtransPaymentService | done | `app/Services/MidtransPaymentService.php`, `app/Console/Commands/ExpireMidtransPayments.php` |
-| FR-47 | raw_payload stored, failures logged and admin-visible | Webhook + admin detail | partial | `app/Http/Controllers/WebhookController.php`, `app/Services/MidtransPaymentService.php`; admin detail in Phase 7 |
-| FR-48 | Dashboard sales summary + queue | Dashboard | not started | — |
-| FR-49 | Catalog CRUD with unique SKU | Admin catalog | not started | — |
-| FR-50 | Stock adjustments | Admin catalog | not started | — |
-| FR-51 | Order manager list/detail | AdminOrderManager | not started | — |
-| FR-52 | Waybill required before shipped | AdminOrderManager | not started | — |
-| FR-53 | Pickup flow: ready_for_pickup → completed | AdminOrderManager | not started | — |
-| FR-54 | Delivered confirmation before completed | AdminOrderManager | not started | — |
-| FR-55 | Admin cancel + manual refund note | AdminOrderManager | not started | — |
-| FR-56 | Sales report on screen | Reports page | not started | — |
-| FR-57 | Admin accounts, super_admin only | Admin accounts | not started | — |
+| FR-47 | raw_payload stored, failures logged and admin-visible | Webhook + admin detail | done | `app/Http/Controllers/WebhookController.php`, `app/Services/MidtransPaymentService.php`, `resources/views/livewire/admin/admin-order-manager.blade.php` |
+| FR-48 | Dashboard sales summary + queue | Dashboard | done | `app/Livewire/Admin/Dashboard.php`, `resources/views/livewire/admin/dashboard.blade.php` |
+| FR-49 | Catalog CRUD with unique SKU | Admin catalog | done | `app/Livewire/Admin/Catalog/Categories.php`, `app/Livewire/Admin/Catalog/Products/Form.php`, `app/Livewire/Admin/Catalog/Products/Index.php` |
+| FR-50 | Stock adjustments | Admin catalog | done | `app/Livewire/Admin/Catalog/Products/Index.php` |
+| FR-51 | Order manager list/detail | AdminOrderManager | done | `app/Livewire/Admin/AdminOrderManager.php`, `resources/views/livewire/admin/admin-order-manager.blade.php` |
+| FR-52 | Waybill required before shipped | AdminOrderManager | done | `app/Livewire/Admin/AdminOrderManager.php`, `app/Services/OrderService.php`, `app/Models/ShippingAddress.php` |
+| FR-53 | Pickup flow: ready_for_pickup → completed | AdminOrderManager + customer order page | done | `app/Livewire/Admin/AdminOrderManager.php`, `app/Services/OrderService.php`, `app/Livewire/Orders/Show.php` |
+| FR-54 | Delivered confirmation before completed | Customer order page | done | `app/Services/OrderService.php`, `app/Livewire/Orders/Show.php` |
+| FR-55 | Admin cancel before shipping + manual refund note | AdminOrderManager + payment service | done | `app/Livewire/Admin/AdminOrderManager.php`, `app/Services/OrderService.php`, `app/Services/MidtransPaymentService.php` |
+| FR-56 | Sales report on screen | Reports page | done | `app/Livewire/Admin/SalesReport.php`, `resources/views/livewire/admin/sales-report.blade.php` |
+| FR-57 | Admin accounts, super_admin only | Admin accounts | done | `app/Livewire/Admin/AdminAccounts.php`, `routes/web.php` |
 | FR-58 | One open chat session per customer | ChatService | not started | — |
 | FR-59 | Text-only, 2000 chars, last 50 messages | ChatService | not started | — |
 | FR-60 | Real-time over chat.{sessionId} | CustomerChat | not started | — |
@@ -240,6 +273,11 @@ Status values: `done` / `partial` / `not started`.
 | Wrong signature changes nothing | done |
 | 24h expiry cancels and releases stock | done |
 | Pickup flow visible to customer | done |
-| Waybill required before shipped | not started |
+| Waybill required before shipped | done |
 | Customer cancel only while pending, own orders only | done |
+| Admin cancellation before shipping records a note and releases reserved stock after payment confirmation | done |
+| A shipped order cannot be cancelled or returned to stock automatically | done |
+| Customer confirms receipt before a courier or pickup order is completed | done |
+| Dashboard and sales report count non-cancelled settled payments by payment date | done |
+| Admin accounts are available only to super admins | done |
 | Chat messages realtime both sides, one open session | not started |
